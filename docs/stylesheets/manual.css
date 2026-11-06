@@ -51,3 +51,7 @@
 
 /* A state word used inline in prose. */
 .md-typeset kbd, .md-typeset code { font-feature-settings: "liga" 0; }
+
+/* Diagrams render into .mermaid; a diagram that fails falls back to its source. */
+.md-typeset .mermaid svg { max-width: 100%; height: auto; }
+.md-typeset pre.mermaid-diagram-failed { font-size: .66rem; opacity: .75; }
