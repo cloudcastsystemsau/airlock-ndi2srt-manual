@@ -1,0 +1,133 @@
+site_name: Airlock Manual
+site_description: Airlock (ndi2srt) — NDI broadcast delay, encoders and decoders for video and audio. User manual.
+site_url: https://cloudcastsystemsau.github.io/airlock-manual/
+repo_url: ""
+copyright: "© Cloudcast Systems. Airlock is a Cloudcast Systems product."
+docs_dir: docs
+site_dir: site
+theme:
+  name: material
+  custom_dir: overrides
+  language: en
+  logo: img/brand/airlock-mark-white.svg
+  favicon: img/brand/airlock-mark.svg
+  font:
+    text: IBM Plex Sans
+    code: JetBrains Mono
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Dark
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Light
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - toc.follow
+extra_css:
+  - stylesheets/manual.css
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+plugins:
+  - search
+  - glightbox:
+      touchNavigation: true
+      effect: fade
+      zoomable: true
+nav:
+  - Home: index.md
+  - Start here:
+      - Overview: start/overview.md
+      - Signal flow: start/signal-flow.md
+      - Install and first run: start/install.md
+      - The console: start/console.md
+      - Licensing: start/licensing.md
+  - Video:
+      - Channels: video/channels.md
+      - Delay: video/delay.md
+      - Fills and schedules: video/fills.md
+      - Censor, cough and slate: video/censor.md
+      - Encoders: video/encoders.md
+      - Decoders: video/decoders.md
+      - SCTE cues: video/scte.md
+      - Timecode and clocking: video/timecode.md
+  - Audio:
+      - Inputs and outputs: audio/io.md
+      - Sources and Stereo Tool: audio/sources.md
+      - Audio delay: audio/delay.md
+      - Audio encoders: audio/encoders.md
+      - Audio decoders: audio/decoders.md
+  - Control:
+      - Operating the delay: control/operating.md
+      - Panel page: control/panel.md
+      - TCP control: control/tcp.md
+      - REST API: control/rest.md
+      - Axia GPIO: control/gpio.md
+      - Channel lock: control/lock.md
+  - Data:
+      - Receivers and routes: data/receivers.md
+  - Scripting:
+      - Overview: scripting/overview.md
+      - Triggers: scripting/triggers.md
+      - Host API: scripting/api.md
+      - Lua: scripting/lua.md
+      - JavaScript: scripting/javascript.md
+      - Variables and examples: scripting/examples.md
+  - Alarms:
+      - Alarms: alarms/alarms.md
+      - Email and webhooks: alarms/email.md
+      - SNMP: alarms/snmp.md
+      - Dump clips and alerts: alarms/clips.md
+  - Server:
+      - General: server/general.md
+      - NDI: server/ndi.md
+      - Authentication and OIDC: server/auth.md
+      - Users and API access: server/users.md
+      - Telemetry: server/telemetry.md
+      - Audit log: server/audit.md
+      - Configuration store: server/config.md
+      - Watchdog and service: server/watchdog.md
+  - Redundancy:
+      - Primary and backup: redundancy/overview.md
+      - Setting up a pair: redundancy/setup.md
+      - Takeover and rejoin: redundancy/takeover.md
+      - Operating a standby: redundancy/standby.md
+  - Reference:
+      - Configuration file: reference/config.md
+      - Alarm catalogue: reference/alarm-catalogue.md
+      - Troubleshooting: reference/troubleshooting.md
+      - Glossary: reference/glossary.md

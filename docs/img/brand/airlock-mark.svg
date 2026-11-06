@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Airlock">
+  <g transform="translate(50,47.548) scale(0.6129)">
+    <polygon points="-30,-30 -30,-58 30,-58 30,-30 18,-30 18,-46 -18,-46 -18,-30" fill="#6d28d9"/>
+    <polygon points="0,-32 52,-14 40,50 0,66 -40,50 -52,-14" fill="#8b5cf6"/>
+    <polygon points="0,-32 52,-14 0,10" fill="#d8b4fe"/>
+    <polygon points="0,-32 -52,-14 0,10" fill="#7c3aed"/>
+    <polygon points="-11,4 15,20 -11,36" fill="#ffffff"/>
+  </g>
+</svg>

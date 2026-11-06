@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Airlock">
+  <g transform="translate(50,47.548) scale(0.6129)" fill="#ffffff">
+    <polygon points="-30,-30 -30,-58 30,-58 30,-30 18,-30 18,-46 -18,-46 -18,-30" opacity="0.8"/>
+    <path fill-rule="evenodd" d="M0,-32 L52,-14 L40,50 L0,66 L-40,50 L-52,-14 Z M-11,4 L-11,36 L15,20 Z"/>
+    <polygon points="0,-32 -52,-14 0,10" opacity="0.25"/>
+  </g>
+</svg>

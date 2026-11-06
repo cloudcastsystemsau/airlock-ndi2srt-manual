@@ -1,0 +1,53 @@
+/* Airlock manual — the console's own palette, carried into the documentation. */
+:root {
+  --md-primary-fg-color:        #6d28d9;
+  --md-primary-fg-color--light: #8b5cf6;
+  --md-primary-fg-color--dark:  #4c1d95;
+  --md-accent-fg-color:         #7c3aed;
+  --md-typeset-a-color:         #6d28d9;
+  --airlock-ok:   #0f7b55;
+  --airlock-warn: #9a6400;
+  --airlock-crit: #b4342b;
+}
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color:  #8b5cf6;
+  --md-accent-fg-color:   #a98bf0;
+  --md-typeset-a-color:   #c4b5fd;
+  --md-hue: 232;
+  --airlock-ok:   #5ccb8e;
+  --airlock-warn: #f5b947;
+  --airlock-crit: #f08a7d;
+}
+
+/* Type: a little more air than the theme's default, and balanced headings. */
+.md-typeset h1, .md-typeset h2, .md-typeset h3 { text-wrap: balance; letter-spacing: -0.01em; }
+.md-typeset h1 { font-weight: 650; }
+.md-typeset h2 { margin-top: 2.2em; padding-top: .4em; border-top: 1px solid var(--md-default-fg-color--lightest); }
+.md-typeset h2:first-of-type { border-top: 0; padding-top: 0; }
+.md-typeset { font-size: .76rem; }
+
+/* Screenshots: framed, never full-bleed, and clickable through the lightbox. */
+.md-typeset img.shot,
+.md-typeset a.glightbox img.shot {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.14);
+  display: block;
+  margin: 1.2em auto;
+  max-width: 100%;
+}
+[data-md-color-scheme="slate"] .md-typeset img.shot { box-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.md-typeset figure img.shot { margin-bottom: .4em; }
+
+/* Tables: settings references are wide and numeric. */
+.md-typeset table:not([class]) { font-size: .68rem; display: table; width: 100%; }
+.md-typeset table:not([class]) th { background: var(--md-default-fg-color--lightest); font-weight: 600; }
+.md-typeset table:not([class]) td:nth-child(3) code,
+.md-typeset table:not([class]) td:nth-child(4) code { white-space: nowrap; }
+.md-typeset td { vertical-align: top; }
+
+/* Mermaid diagrams sit on the page ground, centred. */
+.md-typeset .mermaid { margin: 1.4em auto; text-align: center; }
+
+/* A state word used inline in prose. */
+.md-typeset kbd, .md-typeset code { font-feature-settings: "liga" 0; }
