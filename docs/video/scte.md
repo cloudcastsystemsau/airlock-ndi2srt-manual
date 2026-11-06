@@ -100,8 +100,7 @@ The channel's card on **Video › Delay** has the transport controls:
 The card shows **Ad cues** (how many have aired) among its stats, and a **Last cue**
 line underneath when there is one.
 
-<!-- SHOT: video/delay-cue-controls.png — the Cue out / break length / Cue in / Block cues
-     group on a delay card, with the Last cue line visible underneath. -->
+![The cue controls on a delay card](../img/video/delay-cue-controls.png){ .shot }
 
 ### Over REST
 

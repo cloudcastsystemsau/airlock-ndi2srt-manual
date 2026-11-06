@@ -71,7 +71,7 @@ press — but the server is the authority, not the page.
 
 ## Signing in and out
 
-<!-- SHOT: console/sign-in.png — the sign-in card on the dark splash: the Airlock lockup, username and password fields, the Sign in button, and the "or / Sign in with <provider>" divider below it. -->
+![The sign-in page](../img/console/sign-in.png){ .shot }
 
 With authentication on, the whole console is wrapped: it asks who you are before
 it renders a single menu. The sign-in card takes a username and password, and —

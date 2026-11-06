@@ -6,7 +6,7 @@ administrator takes it. This page covers taking and releasing a lock, exactly
 what is refused, how the refusal reads on each surface, the force release, and
 what the audit log records.
 
-<!-- SHOT: control/lock.png — the Delay card header showing the Locked pill beside the channel name, with Settings / Disable / Stop to its right -->
+![A delay card held by a leader: the Locked pill, and the controls that are no longer available](../img/control/lock.png){ .shot }
 
 ## What a lock is
 
