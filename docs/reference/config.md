@@ -974,10 +974,12 @@ Standalone audio encoders — not tied to a channel's delay or decoder.
 | `audio_encoders[].input` | string | `""` | The named audio input |
 | `audio_encoders[].ndi_source` | string | `""` | The NDI source, for `source_kind: ndi` |
 | `audio_encoders[].channels` | integer | `2` | Channels to encode |
-| `audio_encoders[].codec` | string | `"opus"` | `aac`, `opus`, `mp3`, `flac`, `aptx` or `aptx-hd` |
+| `audio_encoders[].codec` | string | `"opus"` | `aac`, `aac-he-v1`, `aac-he-v2`, `opus`, `mp3`, `flac`, `aptx` or `aptx-hd` |
 | `audio_encoders[].bitrate_kbps` | integer | `128` | |
-| `audio_encoders[].transport` | string | `"srt"` | `srt`, `rtmp`, `icecast` or `hls` |
+| `audio_encoders[].transport` | string | `"srt"` | `srt`, `rtp`, `sip`, `rtmp`, `icecast` or `hls` |
 | `audio_encoders[].srt` | object | *(see SRT)* | Where the coded stream is sent, for `transport: srt` |
+| `audio_encoders[].rtp` | object | | RTP destination, for `transport: rtp`. See [RTP and SIP calls](../audio/rtp-sip.md#reference) |
+| `audio_encoders[].sip` | object | | SIP agent, for `transport: sip`. See [RTP and SIP calls](../audio/rtp-sip.md#reference) |
 | `audio_encoders[].rtmp` | object | | RTMP publish target. See below |
 | `audio_encoders[].icecast` | object | | Icecast source target. See below |
 | `audio_encoders[].hls` | object | | HLS publish target. See below |
@@ -989,8 +991,9 @@ Standalone audio encoders — not tied to a channel's delay or decoder.
     The SRT link between an audio encoder and an audio decoder carries Airlock's
     own framing. A third-party SRT receiver will accept the connection and make
     nothing of the payload, and an Airlock audio decoder cannot take an MPEG-TS
-    source. For standard distribution use Icecast, RTMP or HLS; for a
-    transport-stream SRT feed use a video channel's encoder.
+    source. For someone else's equipment use `rtp` or `sip`; for distribution
+    use Icecast, RTMP or HLS; for a transport-stream SRT feed use a video
+    channel's encoder.
 
 ### audio_encoders[].rtmp
 
@@ -1062,7 +1065,12 @@ audio and/or to a named audio output.
 |---|---|---|---|
 | `audio_decoders[].name` | string | `""` | The decoder's identity everywhere |
 | `audio_decoders[].enabled` | bool | `false` | |
-| `audio_decoders[].srt` | object | *(see SRT)* | Where the coded stream is received |
+| `audio_decoders[].transport` | string | `"srt"` | `srt`, `rtp` or `sip` |
+| `audio_decoders[].srt` | object | *(see SRT)* | Where the coded stream is received, for `transport: srt` |
+| `audio_decoders[].rtp` | object | | Where to listen, for `transport: rtp`. See [RTP and SIP calls](../audio/rtp-sip.md#reference) |
+| `audio_decoders[].sip` | object | | SIP agent, for `transport: sip`. See [RTP and SIP calls](../audio/rtp-sip.md#reference) |
+| `audio_decoders[].codec` | string | `"opus"` | RTP only: `opus` or `aac` (AAC-LC). SRT reads it from the stream, a call agrees it |
+| `audio_decoders[].channels` | integer | `2` | RTP and SIP only: channels the stream carries |
 | `audio_decoders[].ndi_name` | string | `""` | NDI audio send name. Empty = no NDI out |
 | `audio_decoders[].output` | string | `""` | The named audio output to play to. Empty = no device out |
 | `audio_decoders[].licence_assigned` | bool | `false` | Compete for an `ADECODE` seat |

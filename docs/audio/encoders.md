@@ -1,6 +1,6 @@
 # Audio encoders
 
-An audio encoder takes one audio source on this box, codes it, and sends it somewhere — to another Airlock over SRT, to an Icecast mount, to an RTMP ingest, or to an HLS origin. Encoders are standalone blocks: they do not belong to a video channel, and you can run as many as the box has sources and CPU for.
+An audio encoder takes one audio source on this box, codes it, and sends it somewhere — to another Airlock over SRT, to any RTP receiver, to a codec or decoder it calls over SIP, to an Icecast mount, to an RTMP ingest, or to an HLS origin. Encoders are standalone blocks: they do not belong to a video channel, and you can run as many as the box has sources and CPU for.
 
 ![The Audio encoders page, one card per encoder](../img/audio/encoders.png){ .shot }
 
@@ -18,6 +18,8 @@ flowchart LR
   A --> C["Codec<br/>Opus, AAC, MP3, FLAC, aptX"]
   C --> T{"Transport"}
   T --> T1["SRT<br/>to an Airlock audio decoder"]
+  T --> T5["RTP<br/>to any receiver, unicast or multicast"]
+  T --> T6["SIP call<br/>RTP agreed by a call"]
   T --> T2["Icecast<br/>mount on a server"]
   T --> T3["RTMP<br/>app and stream key"]
   T --> T4["HLS<br/>disk, FTP, SFTP or S3"]
@@ -26,7 +28,7 @@ flowchart LR
 The source list on the card is everything this box publishes as audio: every named input from **Audio › Inputs & outputs**, every processing stage from **Audio › Sources** (shown as *processed*), and the output of every audio delay. Choosing **NDI source…** switches the card to an NDI picker instead, and the encoder receives that sender's audio only — no video is taken.
 
 !!! note "Everything encodes at 48 kHz"
-    An encoder always codes at 48 kHz. Named inputs are published at whatever rate their device runs at, and nothing resamples on the way in, so run the capture device at 48 kHz. A source running at 44.1 kHz will be coded as if it were 48 kHz and will play back fast.
+    An encoder always codes at 48 kHz. A source arriving at another rate is converted on the way in, continuously, so there is no click where one block meets the next, and the encoder's log says so once. It is a linear conversion — right for keeping a plant honest, not for mastering — so run capture devices at 48 kHz where you can and nothing is converted at all.
 
 ## Add an encoder
 
@@ -45,8 +47,7 @@ The encoder starts as soon as the save lands. Nothing else restarts: saving the 
 
 ## Choose a transport
 
-!!! note "No RTP transport"
-    Audio encoders send over SRT, Icecast, RTMP or HLS. There is no RTP audio transport — for an RTP-style contribution link, use SRT between two Airlock boxes.
+Which to choose depends on what is at the far end. Another Airlock: SRT. Anything else that takes standard RTP: RTP. A broadcast codec, a phone system, or anything you would rather *dial* than configure: SIP. RTP and SIP have their own page — [RTP and SIP calls](rtp-sip.md).
 
 ### SRT — to another Airlock
 
@@ -63,6 +64,16 @@ Either end may be the listener. Use caller from the studio out to a fixed receiv
     A third-party SRT receiver will accept the connection and make nothing of the payload, and an Airlock audio decoder cannot take an MPEG-TS source. Pair audio SRT with another Airlock. For standard distribution use Icecast, RTMP or HLS; for a transport-stream SRT feed, use a video channel's encoder, which carries its audio as AAC inside TS.
 
 Encryption, link latency and the stream ID are set in the configuration file rather than on the card — see [the SRT reference](#srt) below.
+
+### RTP — to any receiver
+
+RFC 3550 over UDP, unicast or multicast, carrying Opus (RFC 7587) or AAC (RFC 3640). Set **Destination**, **Port**, and for multicast **TTL** and **Send from**; optionally **RTCP** sender reports and a **Second path** for SMPTE 2022-7. RTP carries Opus and AAC only. The full detail, including SDP files for ffmpeg, is on [RTP and SIP calls](rtp-sip.md#rtp).
+
+![An encoder set to RTP](../img/audio/encoder-rtp.png){ .shot }
+
+### SIP call — dial or be dialled
+
+The encoder gets a SIP user agent of its own. Set **Our user**, the **SIP port** and **Media port**, and who to **Call**; then **Dial** from the call card, or turn on **Keep the call up** to dial at start and redial whenever it drops. The call agrees the codec — Opus or AAC-LC — and where the audio goes. An encoder only sends, so it offers and answers *send only*. See [RTP and SIP calls](rtp-sip.md#sip-calls).
 
 ### Icecast — to a mount
 
@@ -128,11 +139,11 @@ POST /api/audio-encoders/<name>/scte35?type=in
 
 | Codec | Console label | Config value | Transports | Bitrates offered (kbps) |
 | --- | --- | --- | --- | --- |
-| AAC-LC | AAC-LC | `aac` | SRT, RTMP, Icecast, HLS | 96, 128, 160, 192, 256, 320 |
-| HE-AAC v1 | HE-AAC v1 | `aac-he-v1` | SRT, RTMP, Icecast, HLS | 32, 48, 64, 80, 96 |
-| HE-AAC v2 | HE-AAC v2 | `aac-he-v2` | SRT, RTMP, Icecast, HLS | 16, 24, 32, 40, 48 |
+| AAC-LC | AAC-LC | `aac` | SRT, RTP, SIP, RTMP, Icecast, HLS | 96, 128, 160, 192, 256, 320 |
+| HE-AAC v1 | HE-AAC v1 | `aac-he-v1` | SRT, RTP, RTMP, Icecast, HLS | 32, 48, 64, 80, 96 |
+| HE-AAC v2 | HE-AAC v2 | `aac-he-v2` | SRT, RTP, RTMP, Icecast, HLS | 16, 24, 32, 40, 48 |
 | MP3 | MP3 | `mp3` | SRT, RTMP, Icecast | 96, 128, 192, 256, 320 |
-| Opus | Opus | `opus` | SRT, Icecast | 32, 48, 64, 96, 128, 160, 192, 256 |
+| Opus | Opus | `opus` | SRT, RTP, SIP, Icecast | 32, 48, 64, 96, 128, 160, 192, 256 |
 | FLAC | FLAC (lossless) | `flac` | SRT | lossless — no bitrate |
 | aptX | aptX | `aptx` | SRT | fixed 384 kbit/s at 48 kHz stereo |
 | aptX HD | aptX HD | `aptx-hd` | SRT | fixed 576 kbit/s at 48 kHz stereo |
@@ -165,29 +176,33 @@ The pill beside each card name is the block's state:
 | **no source** | Running, but nothing is coming from the chosen source. |
 | **stopped** | Not running — disabled, or it refused to start. |
 | **held · standby** | Not running because this box is a locked backup. Hover for the reason. |
+| **refused** | The destination answered and said no. Hover for its words — for example an RTMP server's `NetStream.Publish.BadName`, which means another encoder already holds that stream key. |
+| **unlicensed** | Running without a licence seat, so the output carries the unlicensed tone: a one-second burst every thirty seconds, mixed in before the codec so every transport carries it. |
+
+On a SIP encoder the **call card** under the settings shows the call's own state — see [the call card](rtp-sip.md#the-call-card).
 
 The meter beside the pill is the **program level into the encoder**. An encoder has no output level to show — its output is a coded stream — so this is the one meter on the card.
 
-The status API carries more than the card does. `GET /api/audio-encoders` returns one row per block with `source`, `target`, `transport`, `codec`, `channels`, `rate`, `frames`, `bytes`, `connected`, `held`, the meter, the block's recent log lines, and an `srt` object with the link's own view: `connected`, `peer`, packets sent, lost, retransmitted and dropped, `reconnects` and `last_error`.
+The status API carries more than the card does. `GET /api/audio-encoders` returns one row per block with `source`, `target`, `transport`, `codec`, `channels`, `rate`, `frames`, `bytes`, `connected`, `error` (the destination's reason when it is refusing), `held`, `watermarked`, the meter, the block's recent log lines, an `rtp` object for an RTP or SIP encoder, a `sip` object for a SIP encoder, and an `srt` object with the link's own view: `connected`, `peer`, packets sent, lost, retransmitted and dropped, `reconnects` and `last_error`.
 
 !!! note "`connected` is the destination's word"
-    On an SRT encoder, `connected` is the link's state, not the queue's: a listener that could never bind its port, or a caller nobody answers, reads `false` with the reason in `srt.last_error`. On an HLS encoder it is the origin's state, so a dead FTP or S3 target reads `false` even while segments are being cut and served locally.
+    On an SRT encoder, `connected` is the link's state, not the queue's: a listener that could never bind its port, or a caller nobody answers, reads `false` with the reason in `srt.last_error`. On an HLS encoder it is the origin's state, so a dead FTP or S3 target reads `false` even while segments are being cut and served locally. On RTMP and Icecast it is the server's: a refused publish reads `false` with the server's reason in `error`. On RTP there is no far end to be connected to, so it means the socket is taking the packets; on SIP it means a call is up.
 
 ## Control and automation
 
 | Surface | What it does |
 | --- | --- |
 | GPIO | A mapping row targeting `aenc:<name>` takes the actions **enable** and **disable**, and drives the lamps `running`, `onAir`, `connected` (the source is arriving) and `sourceLost`. |
-| REST | `GET /api/audio-encoders` for status; `POST /api/audio-encoders/<name>/scte35` for an HLS ad break. |
+| REST | `GET /api/audio-encoders` for status; `POST /api/audio-encoders/<name>/scte35` for an HLS ad break; `POST /api/audio-encoders/<name>/call/dial`, `/hangup` or `/answer` on a SIP encoder. |
 | Configuration | Encoders are part of the replicated configuration, so a backup mirrors them exactly. |
 
 ## Redundancy
 
-An audio encoder pushes to a mount, a stream key, an origin or an SRT peer — the same one the primary is pushing to. A locked backup therefore **holds every audio encoder**: none of them run, and each shows **held · standby** with the reason. They start the moment the backup takes over and stop again when it rejoins. NDI outputs are never held, so the box stays hot.
+An audio encoder pushes to a mount, a stream key, an origin, an SRT or RTP peer, or a codec it calls — the same one the primary is pushing to. A locked backup therefore **holds every audio encoder**: none of them run, and each shows **held · standby** with the reason. They start the moment the backup takes over and stop again when it rejoins. NDI outputs are never held, so the box stays hot.
 
 ## Licensing
 
-Audio encoders are issued against the **AENCODE** feature. **Server › Licence** shows how many seats the licence on this box grants.
+Audio encoders are issued against the **AENCODE** feature. **Server › Licence** shows how many seats the licence on this box grants and how many are in use. Seats are taken in the order the encoders are listed: when there are fewer seats than encoders, the first ones in the list hold them. An encoder without a seat still runs, but carries the unlicensed tone and shows **unlicensed** on its card.
 
 
 ## Alarms
@@ -201,7 +216,9 @@ Alarm detectors watch delay channels and their video encoders and decoders. Stan
 | Card says **stopped** right after a save | The block refused to start — usually a codec the transport cannot carry (FLAC or aptX on Icecast, anything but AAC on HLS), an empty host, or a missing native codec library. The reason is in the server log. |
 | **no source** | Nothing is publishing on the chosen source. Check the input on **Audio › Inputs & outputs**, or that the NDI sender is visible from this box. |
 | **on air · connecting** that never clears | Wrong host or port; a listener whose port is already taken; a firewall in the way; or, on SRT, a passphrase set on one end only. Read `srt.last_error`. |
-| Audio plays fast or slow | The source device is not running at 48 kHz. Encoders code at 48 kHz and nothing resamples on the way in. |
+| Audio plays fast or slow | Not a rate problem any more — sources are converted to 48 kHz on the way in. Check the far end's clock, and that nothing between the boxes is resampling on its own. |
+| **refused** on an RTMP encoder | The server turned the publish away. `NetStream.Publish.BadName` means another encoder already holds the stream key — two boxes, one key. |
+| A tone every thirty seconds | The encoder has no licence seat. See Licensing above. |
 | Icecast mount refuses | Wrong source user or password, or a mount already held by another source. The server's refusal is logged verbatim. |
 | HLS plays locally but nothing lands on the origin | The target is failing while the segmenter runs on. The card's **connected** goes false and the destination's error is in the block's log. |
 | HLS playlist 404s on first play | The first segment has not closed yet. Wait one segment length. |
@@ -223,7 +240,7 @@ Alarm detectors watch delay channels and their video encoders and decoders. Stan
 | Channels | — | `channels` | `2` | Channels the encoder codes. Extra source channels are dropped; missing ones are silent. |
 | Codec | Codec | `codec` | `opus` | `aac`, `aac-he-v1`, `aac-he-v2`, `mp3`, `opus`, `flac`, `aptx`, `aptx-hd`. |
 | Bitrate | Bitrate | `bitrate_kbps` | `128` | kbps, for the lossy codecs only. |
-| Transport | Transport | `transport` | `srt` | `srt`, `rtmp`, `icecast` or `hls`. |
+| Transport | Transport | `transport` | `srt` | `srt`, `rtp`, `sip`, `rtmp`, `icecast` or `hls`. RTP and SIP keys are on [RTP and SIP calls](rtp-sip.md#reference). |
 | Alignment delay | Delay | `delay_ms` | `0` | 0–10000 ms held after processing, before the codec. |
 | Processing | — | `stereotool` | disabled | Inline Stereo Tool stage. Prefer a source stage. |
 | Licence seat | — | `licence_assigned` | `false` | Whether the block is assigned a licence seat. |

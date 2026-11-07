@@ -11,7 +11,7 @@ a video encoder and a video decoder, and carries the ad-cue and automation-data
 rails that ride with the pictures. Alongside the channels, the same process runs
 the box's named audio inputs and outputs, audio sources with Stereo Tool
 processing, broadcast (profanity) audio delays, and standalone audio encoders and
-decoders for SRT, RTMP, Icecast and HLS. Everything else — the console, the TCP
+decoders for SRT, RTP, SIP calls, RTMP, Icecast and HLS. Everything else — the console, the TCP
 control port, the SNMP agent, the Axia GPIO client, the alarm centre, the audit
 log, scripting, authentication and redundancy — is shared by the whole process.
 
@@ -44,6 +44,7 @@ Then go to the part of the plant you are building:
 | Receive an SRT feed and put it on NDI | [Video › Decoders](video/decoders.md) |
 | Delay audio on its own, with processing | [Audio delay](audio/delay.md) and [Sources and Stereo Tool](audio/sources.md) |
 | Stream audio to Icecast, RTMP or HLS | [Audio encoders](audio/encoders.md) |
+| Send audio over RTP, or call a codec over SIP | [RTP and SIP calls](audio/rtp-sip.md) |
 | Drive the delay from the studio | [Panel page](control/panel.md), [Axia GPIO](control/gpio.md), [TCP control](control/tcp.md) |
 | Carry automation data through the delay | [Receivers and routes](data/receivers.md) |
 | Automate the box | [Scripting](scripting/overview.md) |
@@ -65,7 +66,7 @@ What one Airlock box can do, and where you set it up.
 | Audio inputs and outputs | The box's capture and playback devices as named objects, opened once and shared | — | Audio › Inputs & outputs |
 | Audio sources | Stereo Tool processing stages; process once, fan out to many consumers | — | Audio › Sources |
 | Audio delay | Broadcast profanity delay built and drained by pitch-preserving time-stretch | `ADELAY` | Audio › Delay |
-| Audio encoders | Opus, AAC, MP3, FLAC, aptX / aptX HD over SRT, RTMP, Icecast or HLS | `AENCODE` | Audio › Encoders |
+| Audio encoders | Opus, AAC, MP3, FLAC, aptX / aptX HD over SRT, RTP, a SIP call, RTMP, Icecast or HLS | `AENCODE` | Audio › Encoders |
 | Audio decoders | A coded audio stream in over SRT, out as NDI audio and/or to an audio output | `ADECODE` | Audio › Decoders |
 | Automation data | TCP/UDP receivers, senders and routes, with the delay in the middle | — | Data › Receivers & routes |
 | Axia GPIO | Studio contacts drive the delay; lamps carry its state back | — | Data › Axia GPIO |

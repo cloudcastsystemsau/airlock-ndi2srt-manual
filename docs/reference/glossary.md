@@ -55,6 +55,27 @@ the byte clock — that is CBR, and it is what hardware decoders and satellite
 paths expect. Set it to `0` for VBR: no null padding, less bandwidth, but PCR
 accuracy that some receivers will not tolerate.
 
+**RTP**
+: Real-time Transport Protocol (RFC 3550). Audio on plain UDP with a sequence
+number, a timestamp and a stream identifier (SSRC) in front of each packet, and
+a payload format per codec — RFC 7587 for Opus, RFC 3640 for AAC. What anything
+that is not Airlock can receive. See [RTP and SIP calls](../audio/rtp-sip.md).
+
+**SIP**
+: Session Initiation Protocol (RFC 3261). How broadcast codecs and phone systems
+set up a call: an INVITE carrying an SDP offer, a 200 OK carrying the answer, an
+ACK, and a BYE to end it. Airlock's SIP agent puts RTP behind a call.
+
+**SDP**
+: Session Description Protocol (RFC 4566). The text a SIP call uses to say which
+codecs it can carry, at which address and port, and in which direction. Also
+the file ffmpeg needs to receive plain RTP.
+
+**SMPTE 2022-7**
+: Seamless protection switching: the same packets sent down two network paths
+and merged at the receiver by sequence number, so either path can fail without
+a gap.
+
 ## Coding
 
 **GOP**

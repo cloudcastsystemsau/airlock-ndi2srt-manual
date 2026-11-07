@@ -352,7 +352,7 @@ HEVC fill clips go through a different decoder and have no such limit.
 | There is no ASIO output | ASIO output is not built | Playback is ALSA, CoreAudio or WASAPI |
 | An audio delay drifts against the device clock | Device and source clocks differ | Depth drift is held with pitch-preserving stretch when the SoundTouch library is beside the executable, and with a linear-resample fallback otherwise |
 | The encoder carries the wrong audio pair | `audio.pair` selects which pair AAC carries | `1` = channels 1–2, `2` = 3–4. A source without the pair asked for falls back to the first pair and says so in the log |
-| A third-party SRT receiver connects to an audio encoder and decodes nothing | That link carries Airlock's own framing, not MPEG-TS | Use Icecast, RTMP or HLS for standard distribution, or a video channel's encoder for a transport-stream SRT feed |
+| A third-party SRT receiver connects to an audio encoder and decodes nothing | That link carries Airlock's own framing, not MPEG-TS | Use RTP or a SIP call for someone else's equipment, Icecast, RTMP or HLS for distribution, or a video channel's encoder for a transport-stream SRT feed |
 | Integrated loudness readings cost a whole core | Historic, in an earlier product: the whole history was re-averaged on every read | Not the case here — the gating block is a single histogram increment. **Reset stats** restarts the measurement, including the integrated figure |
 | Loudness or silence readings look skewed on a watermarked box | They are not: the watermark goes on **after** the loudness meter, **after** the peak meter the silence detector reads, and **after** the alarm-facing preview | The one preview that shows the mark is the delay's output preview, which no detector reads |
 

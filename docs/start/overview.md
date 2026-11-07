@@ -147,7 +147,7 @@ transport.
 | | Choices |
 |---|---|
 | Codec | Opus, AAC-LC / HE-AAC v1 / v2, MP3, FLAC, aptX, aptX HD |
-| Transport | SRT, RTMP, Icecast, HLS |
+| Transport | SRT, RTP, SIP call, RTMP, Icecast, HLS |
 
 Each is a standalone block — it is not tied to a channel. The alignment delay is
 a simple FIFO ring of up to 10 seconds after the processing stage, so a
@@ -157,8 +157,9 @@ See [Audio › Encoders](../audio/encoders.md).
 
 ### Audio decoders
 
-A coded audio stream in over SRT, decoded natively, out as NDI audio and/or to a
-named audio output. The codec is read from the stream.
+A coded audio stream in over SRT, RTP or a SIP call, decoded natively, out as NDI
+audio and/or to a named audio output. On SRT the codec is read from the stream; a
+call agrees it; on plain RTP you set it. See [RTP and SIP calls](../audio/rtp-sip.md).
 
 !!! warning "Audio SRT pairs Airlock with Airlock"
     The SRT link between an audio encoder and an audio decoder carries Airlock's
@@ -166,9 +167,10 @@ named audio output. The codec is read from the stream.
     rate, a sequence number and the codec frames — so a decoder learns the
     stream from the stream and a lost group is a clean gap. A third-party SRT
     receiver will accept the connection and make nothing of the payload, and an
-    Airlock audio decoder cannot take an MPEG-TS source. For standard
-    distribution use Icecast, RTMP or HLS; for a transport-stream SRT feed use a
-    video channel's encoder, which carries its audio as AAC in TS.
+    Airlock audio decoder cannot take an MPEG-TS source. To reach someone
+    else's equipment use RTP or a SIP call; for distribution use Icecast, RTMP or
+    HLS; for a transport-stream SRT feed use a video channel's encoder, which
+    carries its audio as AAC in TS.
 
 See [Audio › Decoders](../audio/decoders.md).
 

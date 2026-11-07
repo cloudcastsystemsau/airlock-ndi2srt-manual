@@ -91,6 +91,8 @@ rule of thumb: *what the service does* travels, *what this machine is* stays.
 | Paths | `logging.file`, `logging.dir`, `clips.dir`, `tools.ffmpeg` |
 | This box's URLs | `clips.public_base_url`, `auth.oidc.redirect_url` |
 | Hardware capacity | `process.priority`, `process.max_memory_mb`, `channels[].video.encoder`, `channels[].video.threads`, `channels[].decoder.hw`, `channels[].delay.max_memory_mb`, `clips.encoder` |
+
+The memory ceilings deserve a sentence of their own, because they surprise people: raising a channel's `delay.max_memory_mb` on the primary does **not** raise it on a backup. They are facts about the hardware, so each box keeps its own. A backup whose ceiling is too small to hold the mirrored channels says so on the Redundancy page and will not take over by itself, which is the point — you find out before the takeover rather than during it. Set a backup's ceiling on the backup; you can do that while it is locked.
 | NDI identity and NICs | `ndi_network.adapters`, `channels[].ndi.receiver_name` |
 | Clock topology | `clock.reference` |
 | Telemetry identity | `telemetry.site` |
@@ -157,6 +159,45 @@ did not verify — is reported per file on the Redundancy page, raises
 still lands.
 
 Clips, logs, the licence and the configuration history stay local on both boxes.
+
+## Delay state travels too
+
+Settings are only half of what a standby needs. The other half is what the
+operator *did*: a build, a dump, a cough held down, a censor. Without it a
+backup mirrors its primary perfectly and still sits at whatever depth it started
+at, so the moment it takes over it is holding different frames from the box it
+replaced.
+
+So a primary records every delay control it applied — build, dump, dump all,
+rollout, a new target depth, cough, censor, the censor latch, force-off and
+slate, for video channels and audio delays alike — and the backup replays them
+against its own delays within a second. A dump on the primary is a dump on the
+standby, covering the same moment.
+
+Three things keep that safe:
+
+* **Only the primary's replayed controls pass the lockout**, and only that set.
+  Operators are refused at every surface exactly as before, and the box's own
+  housekeeping gets no pass either. Each replay is audited as what it is —
+  `delay.mirror.dump`, with the primary's sequence number.
+* **A missed control is never a quiet hole.** Every answer from the primary also
+  says what each delay is holding. A backup that has been away, or has just
+  started, takes those depths rather than replaying a partial history at itself.
+* **Drift is closed quietly.** If the two depths differ by more than
+  `mirror_drift_s` for a few seconds, a backup holding more drops exactly the
+  excess — material the primary has already let go — and one holding less builds
+  toward the target.
+
+Blocks, encoders, locks, licensing and anything that reaches the plant beyond
+this box are **not** mirrored. Holding the same frames is the point; firing the
+same outputs twice is what output suppression prevents.
+
+| Setting | Console label | Config key | Default | Meaning |
+|---|---|---|---|---|
+| Mirror delay state | Mirror delay state | `redundancy.mirror_delay_state` | `true` | Replay the primary's delay controls on this box. |
+| Mirror drift | Mirror drift | `redundancy.mirror_drift_s` | `0.75` | How far this box's depth may differ before it is corrected, in seconds. |
+
+Both are machine-local, like the rest of the section.
 
 ## Lockout on a backup
 

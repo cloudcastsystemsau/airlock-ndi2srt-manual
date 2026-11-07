@@ -231,7 +231,7 @@ anything.
 |---|---|
 | **Inputs & outputs** | This box's audio devices as named inputs and outputs. Name it, pick the device, say how many channels to open (0 = all it has). Each is opened once and shared. |
 | **Sources** | Stereo Tool stages. Build a stage on an input and it becomes a new, processed source any encoder can pick — processed once, fanned out. |
-| **Encoders** | A source, an optional Stereo Tool, an alignment delay, then a codec on SRT, RTMP, Icecast or HLS. Only valid bitrates per codec are offered. |
+| **Encoders** | A source, an optional Stereo Tool, an alignment delay, then a codec on SRT, RTP, a SIP call, RTMP, Icecast or HLS. Only valid bitrates per codec are offered. A SIP encoder has a call card with Dial and Hang up. |
 | **Decoders** | Receive a coded audio stream over SRT, decode it, out as NDI audio and/or to an audio output. |
 | **Delay** | Broadcast profanity delays — source, delay, output, with their own build, dump, censor and exit. |
 

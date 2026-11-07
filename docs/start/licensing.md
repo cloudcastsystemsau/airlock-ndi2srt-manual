@@ -16,7 +16,9 @@ flag, and for a seat pool a bare `KEY` means unlimited.
 | `VENCODE=n` | video encoders |
 | `VDECODE=n` | video decoders |
 | `ADELAY=n` | audio-only delays |
-| `AENCODE=n` · `ADECODE=n` · `AES67=n` | read from the licence and reported; not yet consumed by a block |
+| `AENCODE=n` | audio encoders |
+| `ADECODE=n` | audio decoders |
+| `AES67=n` | read from the licence and reported; not yet consumed by a block |
 | `SCRIPTING` | Lua and JavaScript scripts actually run |
 | `PANEL` | the TCP control port accepts acting verbs |
 | `PRIMARY` · `BACKUP` · `STANDALONE` | which redundancy role this instance may run |
@@ -377,8 +379,8 @@ So that a phone call can confirm it in ten seconds:
   a continuous tone, and not silence. If an operator reports "a beep every half
   minute", that is this.
 
-It is blended at three sites — the delay's output, the encoder's input tap, and
-the decoder's NDI output — and **never applied twice**, because a double stamp
+For video channels it is blended at three sites — the delay's output, the
+encoder's input tap, and the decoder's NDI output — and **never applied twice**, because a double stamp
 would double the tone and read as a fault rather than as enforcement. One blend
 on the delay marks the NDI output *and* the SRT output.
 
@@ -388,6 +390,13 @@ would otherwise swing the loudness reading and suppress a silence alarm, and the
 operator chasing that would be chasing the licence rather than the plant. The
 one preview that does show the mark is the delay's *output* preview, so the card
 shows the operator exactly what is going to air.
+
+The audio-only blocks carry the tone too, each at the point nothing can take it
+off again: an **audio delay** after the delay, the censor and the fill, and on its
+post-censor monitor as well; an **audio encoder** after its processing and before
+the codec, so every transport carries it; an **audio decoder** on the decoded
+audio, before the NDI send and the output. Their seats are taken in the order the
+blocks are listed, and each card shows **unlicensed** while it is marked.
 
 It is **live**: activating a licence, an expiry or a seat re-assignment flips
 the mark within about two seconds, with no restart. There is deliberately **no

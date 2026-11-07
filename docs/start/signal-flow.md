@@ -105,7 +105,7 @@ flowchart LR
   ST --> ENC[Audio encoder]
   DLY --> OUTP[Named output]
   DLY --> ENC
-  ENC --> TX[SRT / RTMP / Icecast / HLS]
+  ENC --> TX[SRT / RTP / SIP call / RTMP / Icecast / HLS]
 ```
 
 The chain reads left to right:
