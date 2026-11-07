@@ -138,6 +138,21 @@ The editor is the source on the left and the binding on the right.
 
 Under the editor, **Output** carries what Check and Test run said, **Problems** the failed checks, and **This script's log** the engine's own lines for this script.
 
+### Autocomplete
+
+![Completing an audio encoder's name inside air.audio_enable](../img/scripting/autocomplete.png){ .shot }
+
+The editor completes as you type:
+
+| Where the caret is | What it offers |
+|---|---|
+| After `air.` (or `air:`) | Every host call this build answers, with its arguments; the highlighted one shows what it does. The list comes from the server, so it is always the engine's own. |
+| Inside a string argument of a host call | The names that argument takes on **this box**: `delay` / `encoder` / `decoder` for a channel's block; the audio delays and stages for `air.audio_build("…")`; for `air.audio_enable("encoder", "…")` the audio **encoders**, following the kind already typed; data senders for `air.send_data`; script variables for `air.get_var`; stage ids for `air.stereotool_bypass`; the configured URLs for `air.webhook`. |
+| In a string compared with `args.event` or `event` | The event words: `EnteredDelayed`, `Dumped`, `CoughOn`, `Connected`, `CallState`, … |
+| Anywhere else, after two letters | The language's keywords, and `air`. |
+
+**↑ / ↓** move, **Enter** or **Tab** accepts, **Esc** closes, and **Ctrl+Space** asks for suggestions where the editor did not offer any. Nothing is offered inside a comment.
+
 On the right:
 
 - **Runs when** — the **Trigger**, and the filters that trigger takes: **Channel** (0 = any), a **Receiver** select or a typed name (**Pin**, **Alarm code**, **Cue kind**, **Event name**), **Run every** for a timer, **Cron schedule** for a schedule, and **Event name** for `scriptDelayed`;

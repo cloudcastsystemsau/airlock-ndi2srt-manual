@@ -869,7 +869,8 @@ same names bound to its own devices.
 |---|---|---|---|
 | `audio_inputs[].name` **(local)** | string | `""` | What consumers name: "Desk", "Axia return", "Studio mic" |
 | `audio_inputs[].device` **(local)** | string | `""` | `hw:1,0` or `default` on Linux, the device's name on macOS and Windows, `asio:<driver name>` for ASIO, empty for the box's default input |
-| `audio_inputs[].channels` **(local)** | integer | `0` | Channels to open. `0` = all the device has |
+| `audio_inputs[].channels` **(local)** | integer | `0` | Channels the input carries. `0` = all the device has |
+| `audio_inputs[].channel_map` **(local)** | integer[] | `[]` | Which device channel (from 0) each of the input's channels is; empty = the first `channels`. Several inputs can name one device and each take their own channels — it is opened once. Max 16 entries, each < 64 |
 
 Each device is opened once and shared by everything that names it. On macOS the
 process needs Microphone permission; on Windows only one ASIO driver can be open

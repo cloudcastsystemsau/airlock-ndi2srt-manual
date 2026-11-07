@@ -58,7 +58,7 @@ A bare QuickJS context is the ECMAScript language and its built-ins. You have `J
 
 - No **`require`**, no `import` resolution, no module loader is installed.
 - No **`process`**, no `globalThis.global`, no `Deno`, no `importScripts`.
-- No **`fetch`**, no `XMLHttpRequest`, no `WebSocket` — no network binding exists to call.
+- No **`fetch`**, no `XMLHttpRequest`, no `WebSocket` — no network binding exists to call; `air.webhook` posts only to the configured URLs.
 - No filesystem binding of any kind.
 - No **`setTimeout`** or `setInterval`, and no event loop to run them on. A promise that is not already settled never settles: there is nothing to pump it. Use the `timer` trigger, or `air.after`.
 - `console` exists and is wired to the host log. That is the whole of the host environment beside `air`.

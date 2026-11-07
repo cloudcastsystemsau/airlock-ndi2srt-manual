@@ -45,8 +45,12 @@ binary as every other platform.
 1. Open **Server › Email & alerts**.
 2. Fill in the **Email** card: host, port, security, credentials, from, to.
 3. Save.
-4. Press **Test email** in the page header. A banner says *Test email sent* or
-   *Test email refused*; the log carries the SMTP error when it refuses.
+4. Press **Test email** in the page header. A banner says *Test email sent*
+   (accepted by the server, for how many recipients) or *Test email failed*
+   with the SMTP server's own words — `permanent error (530): 5.7.0
+   Authentication Required`, `Connection refused`, and so on.
+
+The test buttons use the **saved** settings, so save before you test.
 
 The test message is a plain "SMTP settings are working" through the saved
 settings, subject `<prefix> SMTP test`.
@@ -119,9 +123,17 @@ connection — is retried after a growing wait:
 | 3 | 3 s |
 | 4 | 9 s |
 
-With the default `retries: 3`, a dead endpoint is given up on after about four
-seconds and the failure is logged. Each URL is tried independently; one bad
-endpoint does not stop the others.
+With the default `retries: 3`, an endpoint that refuses is given up on after
+about four seconds; one that accepts the connection and never answers costs
+`timeout_s` on every attempt as well — about 34 s with the defaults — and the
+failure is logged.
+
+**One bad destination delays only itself.** Email and every webhook URL each
+have their own delivery queue, so an endpoint that has stopped answering holds
+up neither the alarm email nor the other URLs, and a slow mail server holds up
+no webhook. Each destination still receives its own messages in order: a
+*restored* never overtakes its *active*. A destination with 256 messages already
+waiting drops new ones, and says so in the log.
 
 ### The payload
 
@@ -182,7 +194,9 @@ ok = hmac.compare_digest(expected, request.headers["X-Airlock-Signature"])
 **Test webhook** in the page header fires a synthetic transition to every URL:
 code `ALARM_TEST`, friendly name *Webhook test*, severity `warning`, block
 `system`, channel 0, `active: true`. It is signed and retried exactly like a real
-one, and it never touches the active alarm list.
+one, and it never touches the active alarm list. The banner names each URL that
+failed and why (`endpoint returned 500 after 3 attempt(s)`, `timeout`), and
+while the retries run the button reads *Sending… (with retries)*.
 
 ```bash
 curl -s -X POST http://host:8090/api/alarms/test-webhook
@@ -200,8 +214,8 @@ curl -s -X POST http://host:8090/api/alarms/test-webhook
 
 ## Troubleshooting
 
-**Test email refused.** The banner is short; the log is not. Look for
-`alarm email failed:` — it carries the SMTP library's own words. Common causes:
+**Test email failed.** The banner carries the SMTP server's own words, and so
+does the log line `alarm email failed:` for a real alarm. Common causes:
 the wrong security mode for the port, a relay that demands authentication, or a
 `from` address the relay will not accept.
 

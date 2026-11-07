@@ -15,6 +15,7 @@ Symptoms, their causes, and what to do. Find the area, find the row.
 |---|---|---|
 | An NDI source does not appear in the picker | The sender is in a group other than `public` | Set `ndi_network.recv_groups` |
 | | The plant runs an NDI Discovery Server | Set `ndi_network.discovery`. **This turns mDNS off, so every sender must register with the server too** |
+| Stopping the service takes 10 s and the log says `shutdown: … still stopping … avahi` (Linux) | NDI's mDNS goes through the avahi daemon over D-Bus; every NDI sender or receiver created or torn down waits for it, up to 25 s each on a box where `avahi-daemon` is busy | The stop never waits more than 10 s: what is still stuck is named in the log and the process exits anyway, with status 0. A block's own Start and Stop do not wait at all (the NDI name is published, and torn down, in the background; the block's log says when publishing was slow). Check `avahi-daemon`'s CPU; an NDI Discovery Server (`ndi_network.discovery`) takes mDNS — and avahi — out of the path |
 | | The sender is on another subnet with no discovery server | Set `ndi_network.extra_ips` |
 | | The box has several NICs and NDI picked the wrong one | Set `ndi_network.adapters` |
 | | A firewall blocks mDNS (5353/udp) or NDI's own TCP/UDP ports (5960 and up) | Open them, and add a rule for the Airlock program |
@@ -163,7 +164,8 @@ HEVC fill clips go through a different decoder and have no such limit.
 | An alarm cleared and re-raised but no second email arrived | A re-raise within `notify_cooldown_s` is held back and sent only if still active when the window ends; if it clears first it is dropped silently | Lower `notify_cooldown_s` |
 | A dismissed alarm still emails and still shows on SNMP | Acknowledge and dismiss are a display overlay. Nothing is persisted and the list starts empty at every launch | Fix the condition, not the display |
 | Email never sends | Wrong security mode for the port | `starttls` (usually 587), `tls` (implicit, usually 465) or `none`. There is no OpenSSL to install. Test with `POST /api/alarms/test-email` |
-| A webhook receiver rejects the signature | The header is `X-Airlock-Signature: sha256=<lowercase hex HMAC-SHA256 of the body>` | Match the algorithm and the casing. Retried at 1 s, 3 s and 9 s until a 2xx. Test with `POST /api/alarms/test-webhook` |
+| A webhook receiver rejects the signature | The header is `X-Airlock-Signature: sha256=<lowercase hex HMAC-SHA256 of the body>` | Match the algorithm and the casing. Retried at 1 s, 3 s and 9 s until a 2xx. Test with `POST /api/alarms/test-webhook` — the reply names each failing URL and why |
+| Alarm email arrives late while a webhook endpoint is down | Fixed in NDS-138 — email and each webhook URL now have their own queue | Update. Before it, a webhook endpoint that never answered held every later alarm's email for up to ~34 s per transition |
 | A webhook receiver treats a dump as a stuck alarm | A dump post deliberately has no `active` field | Tell the two apart by `event`: `"alarm"` or `"dump"` |
 | SNMP returns nothing | A request with the wrong community is dropped silently, by v2c convention | Match `snmp.community` |
 | The SNMP agent will not bind | **Port 161 needs root or `CAP_NET_BIND_SERVICE`** | Use 1161, or grant the capability |
@@ -209,6 +211,7 @@ HEVC fill clips go through a different decoder and have no such limit.
 | `/api/delay/dump` with no `seconds` dumped everything | That is Dump all | Pass `?seconds=` for a partial dump |
 | TCP errors | `ERR <ch> <CODE> <reason>`, lines ending CR LF | Codes: `BADVERB`, `BADCH`, `NOCHAN`, `INVALID_STATE`, `LOCKED`, `LICENSE` / `UNLICENSED`, `AUTH` |
 | A TCP peer is refused at connect | `tcp.allow_list` does not include it | Loopback is always allowed; add the peer, or clear the list |
+| The service starts, then stops with exit status **3** | The web port (`web.port`) is held by something else — another instance or another program. The log's last line is `web: bind …: Address already in use — exiting` | A port still being let go of (the previous instance stopping) is waited for, for 15 s. Past that the instance exits rather than run with no console and no API, so the service manager restarts it. Find the holder (`ss -ltnp`, `netstat -ano`) or change `web.port` |
 | A TCP session is refused before any command | `auth.tcp_token` is set | Open with `AUTH <token>`. A wrong token answers `ERR 0 AUTH bad token` and the socket closes |
 | `SUBSCRIBE` seems to ignore an earlier line | It **accumulates** across lines rather than replacing | Expected. It answers with its snapshot after the `OK` |
 

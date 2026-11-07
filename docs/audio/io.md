@@ -51,7 +51,13 @@ output without fighting for the card.
     - **Name** — what consumers will pick. Keep it short and stable.
     - **Device** — choose from the list of capture devices this box reports.
       Leave it on **Default input** to take the system default.
-    - **Channels** — how many channels to open. `0` means *all the device has*.
+    - **Channels** — how many channels the input carries: **All** (every
+      channel the device has), or a count.
+    - **Device channels in** — one select per channel (**Left** / **Right**
+      for a pair, **Channel** for mono, **Ch 1**, **Ch 2** … beyond that),
+      each listing the device's real channels. Pick which device channel
+      each one is. On macOS the list shows the driver's own channel names
+      (`3 · Mic 3`); ALSA and an unopened ASIO driver show numbers.
 4. Press **Save**.
 
 The input opens immediately. The state pill at the end of the row turns to
@@ -61,15 +67,35 @@ grey pill next to it says `unused` until something subscribes.
 !!! note "There is no sample-rate field"
     An input runs at the device's own rate and reports it. Consumers conform the
     rate themselves, so a 44.1 kHz card and a 48 kHz card can both feed the same
-    encoder. Likewise there is no *first channel* on the input: an input opens a
-    block of channels, and each consumer picks the slice it wants — an extra
-    track on a video delay has its own **First channel** and **Channels**
-    fields, for example.
+    encoder.
+
+### One device, several inputs
+
+A multichannel interface — a CoreAudio aggregate, an ASIO card, a 16-channel
+USB desk — is one device with many channels. Give each signal on it its own
+named input, all naming the same device, each picking its own channels:
+
+| Name | Device | Device channels in |
+|---|---|---|
+| `Presenter mic` | `MOTU 828` | Channel **3** |
+| `Guest mic` | `MOTU 828` | Channel **4** |
+| `Studio PGM` | `MOTU 828` | Left **1**, Right **2** |
+| `Phone hybrid` | `MOTU 828` | Left **8**, Right **7** (swapped) |
+
+Airlock still opens the device **once** — as wide as the highest channel any of
+them picks — and hands each input only its own channels. Channels can be picked
+in any order, so a swapped pair is fixed here rather than downstream.
+
+A one-channel input is mono. An audio encoder set to stereo puts a mono input on
+**both** sides, and so does a stereo output; it is never left in one ear.
 
 ## Add a named output
 
 1. In the **Audio outputs** card, press **Add output**.
-2. Fill in **Name**, **Device** (or **Default output**) and **Channels**.
+2. Fill in **Name**, **Device** (or **Default output**), **Channels**, and
+   **Device channels out** — which of the device's channels the output plays
+   to. An output on channels 3–4 of an eight-channel card leaves the other six
+   alone, and its meter reads the channels it plays to.
 3. Press **Save**.
 
 Then point something at it: an audio delay's **Play to output**, an audio
@@ -189,7 +215,8 @@ encoder's input, a track's input. So the rule for a redundant pair is simple:
 |---|---|---|---|---|
 | Name | **Name** | `audio_inputs[].name` | — | The name every consumer refers to. Must be unique on the box. |
 | Device | **Device** | `audio_inputs[].device` | `""` | The capture device. `hw:C,D` or `default` on Linux, the device's own name on macOS and Windows, `asio:<driver>` for ASIO. Empty = the box's default input. |
-| Channels | **Channels** | `audio_inputs[].channels` | `0` | Channels to open. `0` = all the device has (up to 64). |
+| Channels | **Channels** | `audio_inputs[].channels` | `0` | How many channels the input carries. `0` = all the device has (up to 64). |
+| Device channels | **Device channels in** | `audio_inputs[].channel_map` | `[]` | Which device channel each of the input's channels is, counted from **0**. `[3, 2]` is a pair from channels 4 and 3. Empty = the first `channels`. Up to 16 entries; each below 64. |
 
 ### Audio output
 
@@ -197,7 +224,8 @@ encoder's input, a track's input. So the rule for a redundant pair is simple:
 |---|---|---|---|---|
 | Name | **Name** | `audio_outputs[].name` | — | The name blocks play to. |
 | Device | **Device** | `audio_outputs[].device` | `""` | The playback device, named as above. Empty = the box's default output. ASIO is not available here. |
-| Channels | **Channels** | `audio_outputs[].channels` | `0` | Channels to open. `0` = all the device has. |
+| Channels | **Channels** | `audio_outputs[].channels` | `0` | How many channels the output carries. `0` = all the device has. |
+| Device channels | **Device channels out** | `audio_outputs[].channel_map` | `[]` | Which device channel each of the output's channels plays to, from **0**. The device is opened as wide as the highest one; the rest play silence. |
 
 Both lists live at the top level of `ndi2srt.json`:
 
@@ -205,10 +233,11 @@ Both lists live at the top level of `ndi2srt.json`:
 {
   "audio_inputs": [
     { "name": "Studio A desk", "device": "hw:1,0", "channels": 2 },
+    { "name": "Presenter mic", "device": "hw:1,0", "channels": 1, "channel_map": [2] },
     { "name": "Talkback",      "device": "default", "channels": 0 }
   ],
   "audio_outputs": [
-    { "name": "Studio A return", "device": "hw:1,0", "channels": 2 },
+    { "name": "Studio A return", "device": "hw:2,0", "channels": 2, "channel_map": [2, 3] },
     { "name": "Control room",    "device": "",       "channels": 2 }
   ]
 }
@@ -218,16 +247,19 @@ Both lists live at the top level of `ndi2srt.json`:
 
 | Endpoint | What it returns |
 |---|---|
-| `GET /api/audio-devices` | Every capture device this box can see |
-| `GET /api/audio-output-devices` | Every playback device this box can see |
+| `GET /api/audio-devices` | Every capture device this box can see, with its channel count and — where the driver names them — `channel_names` |
+| `GET /api/audio-output-devices` | Every playback device this box can see, likewise |
 | `GET /api/audio-inputs` | Each named input: state, channels open, rate, subscribers, frames, per-channel peak, silence seconds, dropped blocks |
 | `GET /api/audio-outputs` | Each named output: state, channels open, rate, voices, frames, underruns, per-channel peak |
 
 ## Behaviour you should know about
 
 - **Changes apply on save.** Saving the page opens what is new, closes what is
-  gone and reopens anything whose device or channel count changed. Consumers of
+  gone and reopens anything whose device or channels changed. Consumers of
   a reopened input resubscribe on their own, with a short gap in their audio.
+  Changing one input's channels reopens the device it shares with others, so
+  every input on that device has the same short gap — but only the changed
+  input's consumers resubscribe.
 - **A device that disappears is retried every 5 seconds.** The consumer keeps
   running and reads silence; it rejoins automatically when the card returns.
 - **A slow consumer loses audio, never the device.** Each subscriber has about
@@ -259,9 +291,8 @@ The device is delivering, and every sample is zero.
 - On macOS, this is almost always missing Microphone permission.
 - On Linux, check you opened the right subdevice — many cards expose several,
   and only one carries the signal.
-- Check the channel count. If the signal is on channels 3–4 and you opened 2,
-  you are listening to a silent pair; open all the channels (`0`) and let the
-  consumer pick the pair.
+- Check the channels. If the signal is on channels 3–4 and the input picks 1–2,
+  you are listening to a silent pair: pick 3 and 4 under **Device channels in**.
 
 **The input is open with signal, but the consumer is silent.**
 Check the consumer's channel selection, then check its own meter. On an audio

@@ -115,6 +115,20 @@ is a backup — controls are managed by the primary at &lt;url&gt;*:
 Every refusal is written to the audit log as `control.locked`, with who tried it
 and what they tried.
 
+### Scripts on a standby
+
+The primary's scripts and variables are mirrored here and **loaded**, so they are
+ready the instant this box takes over. Until then their **automatic triggers are
+held** — timers, schedules, data, GPI, alarms, channel, encoder, decoder and audio
+events, SCTE cues and `air.after` one-shots arrive, are counted (`held`, on each
+script's row and in `/api/state`), and do not run. A standby therefore neither
+fills its audit log with refused controls nor writes variables that the next sync
+would overwrite. The Scripts page says *On standby — automatic triggers are held*.
+
+`startup` and `shutdown` still run, and so does `status`: a script bound to it
+hears `takeover` the moment this box goes on air, after which every trigger fires
+as normal. After a rejoin they are held again.
+
 !!! warning "You cannot edit a standby's own settings from its console"
     The lockout is blanket: it refuses the configuration save, not just the
     settings that would be overwritten by the next poll. To change a

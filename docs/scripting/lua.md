@@ -76,7 +76,7 @@ The libraries that reach the machine are **never opened**, so there is nothing t
 - No **`debug`** — no introspection of the host state, no hook tampering.
 - No **`load`**, **`loadstring`**, **`loadfile`** or **`dofile`** — the doors back to all of the above are closed before a line of your source runs, so a script cannot compile more code at run time.
 - No **`collectgarbage`**.
-- No JSON, no XML, no HTTP, no sockets — there is no library and no binding.
+- No JSON, no XML, no HTTP, no sockets — there is no library and no binding. The only ways out are the host's own, to destinations an administrator configured: `air.send_data`, `air.webhook` and `air.email`.
 - **No Rust value is ever handed to Lua.** The `air` table holds plain functions over numbers, strings and booleans; there is no userdata to reach through.
 
 ## Gotchas

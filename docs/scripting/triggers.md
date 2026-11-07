@@ -85,11 +85,31 @@ The **Binding** column is what you write in the configuration and what the conso
 | `channelEvent` | `ChannelEvent` | The delay changed state, dumped, wrote a clip, or a block was restarted | The event name (table below) | `channel`, `event`, plus that event's own keys |
 | `encoderEvent` | `EncoderEvent` | That channel's encoder went `Running` or `Down` | `Running` \| `Down` | `channel`, `block` (`encoder`), `event` |
 | `decoderEvent` | `DecoderEvent` | That channel's decoder went `Running` or `Down` | `Running` \| `Down` | `channel`, `block` (`decoder`), `event` |
+| `audioEvent` | `AudioEvent` | An audio delay changed state, dumped, or a cough or censor went on or off | The **audio delay's name** | `name`, `event` (table below), plus that event's own keys |
+| `audioEncoderEvent` | `AudioEncoderEvent` | An audio encoder started or stopped, connected or dropped, or its SIP call changed | The **encoder's name** | `name`, `event` (table below), plus `state`, `from` on a call change |
+| `audioDecoderEvent` | `AudioDecoderEvent` | The same, for an audio decoder | The **decoder's name** | The same |
 | `alarm` | `Alarm` | An alarm was raised or cleared | The alarm code | `code`, `state` (`raised` \| `cleared`), `block`, `channel`, `message` |
 | `gpi` | `Gpi` | A GPIO input edge that a mapping row recognised | `<device>/<port>.<pin>` | `device`, `port`, `pin`, `edge` (`asserted` \| `released`), `action`, `channel` |
 | `scteReceived` | `ScteReceived` | A SCTE cue arrived from the source | The cue kind | `channel`, `cueType`, `immediate`, `spliceEventId`, `uniqueProgramId`, `preRollMs`, `breakDurationSeconds`, `autoReturn`, `description` |
 | `scteAired` | `ScteAired` | That cue reached air, one depth later | The cue kind | The same keys |
 | `status` | `Status` | This box **took over** or **rejoined** | `takeover` \| `rejoin` | `event`, `by`, plus `automatic` and `primary` on a takeover |
+
+### Audio event names
+
+The audio blocks have names, not channel numbers, so on the three audio triggers
+the `event` filter is the **block's name** — bind `audioEvent` with event
+`Breakfast` to hear that one delay — and what happened is `args.event`. A
+`channel` filter never matches them (they carry none; the script is handed `-1`).
+
+| trigger | `args.event` | when | extra `args` |
+|---|---|---|---|
+| `audioEvent` | `EnteredBuilding` · `EnteredDelayed` · `ReturnedToLive` · `EnteredRollingOut` · `Stopped` | the delay went `building` · `full` · `bypass` · `exiting` · stopped | `state`, `from` |
+| `audioEvent` | `Dumped` | a dump was taken | `dumps` (the running count) |
+| `audioEvent` | `CoughOn` · `CoughOff` | a cough (pre or post) went on or off | — |
+| `audioEvent` | `CensorOn` · `CensorOff` | a censor (pre or post) went on or off | — |
+| `audioEncoderEvent` · `audioDecoderEvent` | `Running` · `Down` | the block started or stopped (an encoder held on a standby is down) | — |
+| `audioEncoderEvent` · `audioDecoderEvent` | `Connected` · `Disconnected` | it reached, or lost, its far end | — |
+| `audioEncoderEvent` · `audioDecoderEvent` | `CallState` | its SIP call changed | `state`, `from` (`idle` · `calling` · `ringing` · `incoming` · `in_call` · `failed` · `held`) |
 
 !!! note "The console's wording for `status`"
     The Trigger select labels `status` *Every status tick*. It is not a tick: it fires only when this instance takes over from a primary or rejoins as a backup.
@@ -188,7 +208,9 @@ This is how an originated ad break is ended on your own clock rather than on the
 
 **Nothing runs at the hook.** Every source matches the bindings, builds the argument map and *queues*. One dispatcher thread runs the scripts, one at a time. That matters most for `dataDelayed` and `scteAired`, which are raised on the delay's **output thread** — the thread that owes NDI its next frame. When the queue (`scripting.queue_size`, 64) is full the invocation is **dropped and counted**, never waited on.
 
-**State is polled at 4 Hz.** `channelEvent`, `encoderEvent` and `decoderEvent` come from a 250 ms poll of the state each block reports. A change that reverses inside 250 ms is seen once, or not at all. Every other trigger is an edge at its own site. The poll is also **seeded on the first pass**, so a restart never replays the state the box came up in as a transition.
+**State is polled at 4 Hz.** `channelEvent`, `encoderEvent`, `decoderEvent` and the three audio triggers come from a 250 ms poll of the state each block reports. A change that reverses inside 250 ms is seen once, or not at all. Every other trigger is an edge at its own site. The poll is also **seeded on the first pass**, so a restart never replays the state the box came up in as a transition.
+
+**A locked backup holds them.** On a standby (a backup with its controls locked) every automatic trigger is counted as `held` and not run, until the box takes over; `startup`, `shutdown` and `status` still run. See [Redundancy › Standby](../redundancy/standby.md#scripts-on-a-standby).
 
 **Counters are per binding.** `fired`, `dropped`, `failed`, the last fire and the last error are kept for each script's binding and shown on the Scripts page and in `/api/state` — so "the trigger never arrives" (`fired` 0) and "the script always fails" (`failed` climbing) are different rows rather than the same blank one.
 
@@ -201,6 +223,7 @@ A binding may only name a trigger this build has a source for. Anything else is 
 | Name | What it is |
 |---|---|
 | `scriptCompleted` | A trigger name a ported script may compare against, but not a binding: script chaining has no host call here, so nothing ever raises it. |
-| `audioEvent`, `audioEncoderEvent`, `audioDecoderEvent`, `videoDecoderEvent` | Not trigger names at all. They name blocks this product does not have, and are refused everywhere. |
+
+`videoEncoderEvent` and `videoDecoderEvent`, Airlock's words for the per-channel encoder and decoder, are accepted and saved as `encoderEvent` / `decoderEvent`.
 
 The console's **Trigger** select offers only the words the server will accept, so it cannot put you in that position. Hand-edited configuration can, and is refused on load.

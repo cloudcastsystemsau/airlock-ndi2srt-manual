@@ -84,7 +84,7 @@ To add one, select **Add track**, then fill in:
 | From | `aux[].kind` | **NDI source** (`ndi`) or **Audio input** (`input`) |
 | NDI source | `aux[].ndi_source` | the sender whose audio is taken; its video is never received |
 | Audio input | `aux[].input` | one of this box's named audio inputs, defined once on **Audio › Inputs & outputs** and shared by everything that names it |
-| From channel | `aux[].first_channel` | the first of the input's channels the track takes (shown 1-based, stored 0-based) |
+| Source channel(s) | `aux[].first_channel` | which of the source's channels the track takes, picked from a list of them — `3–4 · Mic 3 / Mic 4` where the driver names its channels (shown 1-based, stored 0-based) |
 | Channels | `aux[].channels` | how many channels the track carries: 1, 2, 4, 6 or 8 |
 | Offset | `aux[].offset_ms` | how much later than its picture the track's audio arrives — a capture path's latency. The track is read that much later so it lands with the picture. Negative for audio that arrives early |
 | While a fill airs | `aux[].fill` | **The fill's own audio** (`parent`) or **Silence** |

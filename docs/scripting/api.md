@@ -88,8 +88,84 @@ To control the return precisely rather than leaving it to `auto_return`, origina
 |---|---|---|
 | `air.start(ch, block)` | bool | Start it now. |
 | `air.stop(ch, block)` | bool | Stop it now. Stopping something that is not running is **not** an error on any surface, so this answers `true`. |
+| `air.restart(ch, block)` | bool | Stop and start it in one call — the watchdog's restart, audited as the script. For a stuck SRT session or a decoder that should re-dial. |
 | `air.enable(ch, block)` | bool | Set the persisted intent to enabled, and make the block match it. This survives a restart where `start` does not. |
 | `air.disable(ch, block)` | bool | The same, disabled. |
+
+## Audio blocks
+
+The audio side — audio delays, processing stages, audio encoders and decoders —
+is called by **name**, the one on its page, not by channel number. `kind` is
+`encoder`, `decoder`, `delay` or `stage` (`audio_encoder`, `enc`, `source`,
+`stereotool` and the like are read the same). Every control goes through the
+same door as a video one: audited as the script, refused (with `false`) on a
+backup whose controls are locked, and a name that does not exist is a refusal,
+not an error.
+
+| call | returns | what it does |
+|---|---|---|
+| `air.audio_build(name)` | bool | build an audio delay (or a profanity stage) up to its depth |
+| `air.audio_dump(name)` · `air.audio_dump_all(name)` | bool | dump one chunk, or everything it holds |
+| `air.audio_rollout(name)` | bool | roll out to live |
+| `air.audio_bypass(name)` | bool | straight to bypass (live), no rollout |
+| `air.audio_cough(name, on)` | bool | hold (`true`, the default) or release a cough |
+| `air.audio_censor(name[, seconds])` | bool | a censor that lands on the delayed audio; the configured length when `seconds` is left out |
+| `air.audio_censor_on(name)` · `air.audio_censor_off(name)` | bool | hold a censor on, and release it |
+| `air.audio_censor_force_off(name)` | bool | clear the pre and the post censor at once — the escape hatch |
+| `air.audio_cough_post(name, on)` · `air.audio_censor_post(name, on)` | bool | dead air or tone **at the air point, now** — the post-delay covers |
+| `air.audio_enable(kind, name)` · `air.audio_disable(kind, name)` | bool | the stored on/off of any audio block, and the block made to match it |
+| `air.stereotool_bypass(stage, on)` | bool | Stereo Tool's bypass on a stage (by id or name): switched on the running engine — its consumers hear no gap — and stored |
+| `air.dial(kind, name[, uri])` | bool | place a SIP call from an audio encoder or decoder; to its configured address when `uri` is left out |
+| `air.hangup(kind, name)` | bool | end that block's call. **Never refused**, on a backup or anywhere: an operator must always be able to end a call |
+| `air.answer(kind, name)` | bool | answer a call ringing on it |
+
+The reads, which like every read are never refused:
+
+| call | returns | what it is |
+|---|---|---|
+| `air.audio_state(name)` | `building` \| `full` \| `exiting` \| `bypass` \| `stopped`; `""` for no such delay | an audio delay's state word |
+| `air.audio_depth(name)` · `air.audio_target_depth(name)` | seconds, `0` for no such delay | its depth now, and what it builds to |
+| `air.audio_running(kind, name)` | bool | is that block running (an encoder held on a standby is not) |
+| `air.audio_connected(kind, name)` | bool | is it fed (a delay or stage) or connected to its far end (an encoder or decoder) |
+| `air.call_state(kind, name)` | `idle` \| `calling` \| `ringing` \| `incoming` \| `in_call` \| `failed` \| `held`; `""` when not on SIP | its SIP call |
+| `air.audio_names(kind)` | array of strings | every configured block of that kind (stages by id) — loop over them as over `air.channels()` |
+
+```lua
+-- Dump every audio delay that is on air when the studio's red button goes.
+function main(trigger, channel, event, args)
+  for _, name in ipairs(air.audio_names("delay")) do
+    if air.audio_state(name) == "full" then air.audio_dump(name) end
+  end
+end
+```
+
+## Email and webhooks
+
+Through the SMTP server and webhook URLs on **Server › Email & alerts** — the
+alarms' own — and the alarms' own queues: the call returns as soon as the
+message is queued, so a slow mail server or a dead endpoint never holds the
+script, and what became of the message is in the log (`alarm email sent …`,
+`alarm webhook … failed: …`).
+
+| call | returns | what it does |
+|---|---|---|
+| `air.email(subject, body[, to])` | bool | a plain-text email (the same text as HTML), the subject after the configured prefix; `to` — a comma list — replaces the configured recipients. Refused (`false`) when email is not enabled and set up |
+| `air.webhook(payload[, url])` | bool | POST `{"event": "script", "script", "instance", "host", "time", "whenUtc", "payload"}` to every configured URL, or to the one named — it must be one of them. A table (Lua) or object (JS) payload is sent as JSON — a Lua sequence as an array — and anything else as itself. Signed with `X-Airlock-Signature` like an alarm, retried the same way, 64 KB at most |
+
+Both are **refused on a backup** that is not speaking for the plant (the primary
+is sending the same thing), audited as the script (`script.email`,
+`script.webhook`), and rate-limited: **10 emails and 60 webhooks a minute per
+script**. A receiver tells a script's message from an alarm's by `event`.
+
+```lua
+-- Tell the newsroom when the breakfast delay goes to air.
+function main(trigger, channel, event, args)
+  if args.event == "EnteredDelayed" then
+    air.email("Breakfast is delayed", "On air at " .. air.audio_depth(event) .. " s")
+    air.webhook({ show = event, state = "delayed", depth = air.audio_depth(event) })
+  end
+end
+```
 
 ## Data
 
