@@ -96,7 +96,10 @@ A one-channel input is mono. An audio encoder set to stereo puts a mono input on
    **Device channels out** — which of the device's channels the output plays
    to. An output on channels 3–4 of an eight-channel card leaves the other six
    alone, and its meter reads the channels it plays to.
-3. Press **Save**.
+3. Leave **Sample rate** at **Usual (48 kHz)** unless the output is for an FM
+   composite: then pick **192 kHz (MPX)** — see
+   [FM composite and RDS](sources.md#fm-composite-mpx-and-rds).
+4. Press **Save**.
 
 Then point something at it: an audio delay's **Play to output**, an audio
 decoder's output, or a delay's confidence monitor. The output row shows
@@ -226,6 +229,7 @@ encoder's input, a track's input. So the rule for a redundant pair is simple:
 | Device | **Device** | `audio_outputs[].device` | `""` | The playback device, named as above. Empty = the box's default output. ASIO is not available here. |
 | Channels | **Channels** | `audio_outputs[].channels` | `0` | How many channels the output carries. `0` = all the device has. |
 | Device channels | **Device channels out** | `audio_outputs[].channel_map` | `[]` | Which device channel each of the output's channels plays to, from **0**. The device is opened as wide as the highest one; the rest play silence. |
+| Sample rate | **Sample rate** | `audio_outputs[].rate` | `0` | The rate the device is opened at. `0` = the usual: 48 kHz on Linux, the device's own rate elsewhere. `192000` is for a Stereo Tool MPX composite, and the device must run at it natively — the composite is never resampled. |
 
 Both lists live at the top level of `ndi2srt.json`:
 

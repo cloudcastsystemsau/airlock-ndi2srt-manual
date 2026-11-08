@@ -114,7 +114,12 @@ not an error.
 | `air.audio_censor_force_off(name)` | bool | clear the pre and the post censor at once — the escape hatch |
 | `air.audio_cough_post(name, on)` · `air.audio_censor_post(name, on)` | bool | dead air or tone **at the air point, now** — the post-delay covers |
 | `air.audio_enable(kind, name)` · `air.audio_disable(kind, name)` | bool | the stored on/off of any audio block, and the block made to match it |
-| `air.stereotool_bypass(stage, on)` | bool | Stereo Tool's bypass on a stage (by id or name): switched on the running engine — its consumers hear no gap — and stored |
+| `air.stereotool_bypass(stereotool, on)` | bool | Stereo Tool's bypass on a processing stage (by id or name) or on an audio encoder's own Stereo Tool: switched on the running engine — no gap, no restart — and stored |
+| `air.stereotool_status(stereotool)` | table / object, or `nil` / `null` | `kind` (`"stage"`/`"encoder"`), `loaded`, `bypass`, `checked` (read after audio passed), `licence_valid`, `unlicensed` (its output carries Stereo Tool's watermark), `latency_samples`, `latency_ms`, `version` |
+| `air.stereotool_latency(stereotool)` | number | the processing latency in milliseconds; `-1` when there is no such Stereo Tool or it is not running |
+| `air.rds_set(stage, field, value)` | bool | one RDS field on a Stereo Tool stage's FM composite, on the running processor (not saved): `ps`, `rt`, `pi` (hex `"C201"`), `pty`, `tp`, `ta`, `music`, `ct`, `af1`–`af25`, `long_ps`, `ptyn`, `ecc`, `ews`, `pin_*`, `lan`, `rds_on`, `rds_level`, `stereo`, `pilot_level`, `rds2_*` and more — text, a number or `true`/`false`. The full list is in [FM composite and RDS](../audio/sources.md#rds-from-a-script-or-rest) |
+| `air.rds_ps(stage, text)` · `air.rds_rt(stage, text)` | bool | the PS name (8 characters) and the RadioText (now playing, 64) |
+| `air.rds_status(stage)` | table / object, or `nil` / `null` | `mpx`, `mpx_output`, `mpx_playing`, `mpx_rate`, `mpx_note` (why it is not playing), `rds`, and `fields` — every RDS field as Stereo Tool holds it, as text |
 | `air.dial(kind, name[, uri])` | bool | place a SIP call from an audio encoder or decoder; to its configured address when `uri` is left out |
 | `air.hangup(kind, name)` | bool | end that block's call. **Never refused**, on a backup or anywhere: an operator must always be able to end a call |
 | `air.answer(kind, name)` | bool | answer a call ringing on it |

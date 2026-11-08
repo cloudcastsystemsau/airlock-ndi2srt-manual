@@ -888,6 +888,7 @@ This box's audio playback devices, as named outputs. Same shape and same rules a
 | `audio_outputs[].name` **(local)** | string | `""` | What consumers name |
 | `audio_outputs[].device` **(local)** | string | `""` | The device on this box |
 | `audio_outputs[].channels` **(local)** | integer | `0` | Channels to open. `0` = all the device has |
+| `audio_outputs[].rate` **(local)** | integer | `0` | Sample rate to open the device at. `0` = the usual (48 kHz on Linux, the device's own elsewhere); `192000` for a Stereo Tool MPX composite |
 
 ASIO output is not built yet; playback is ALSA, CoreAudio or WASAPI.
 
@@ -1120,8 +1121,9 @@ air at once.
 ### Stereo Tool
 
 Used by `audio_stages[].stereotool` and `audio_encoders[].stereotool`. The native
-Stereo Tool library is loaded at run time and licensed separately. Bypassed or
-unlicensed, the stage passes audio through.
+Stereo Tool library is loaded at run time and licensed separately. Bypassed, the
+stage passes audio through; unlicensed, it still processes and Stereo Tool adds
+its watermark.
 
 | Key | Type | Default | Meaning |
 |---|---|---|---|
@@ -1132,6 +1134,9 @@ unlicensed, the stage passes audio through.
 | `….stereotool.web_enable` | bool | `false` | Expose Stereo Tool's own browser tuning GUI |
 | `….stereotool.web_port` | integer | `0` | `0` picks a free port, reported back in the status |
 | `….stereotool.web_whitelist` | string | `"127.0.0.1/32"` | Who may reach that GUI |
+| `audio_stages[].stereotool.mpx` | bool | `false` | Build the FM composite (MPX: stereo multiplex, pilot, RDS) and play it out of `mpx_output`. Stages only — refused on an encoder |
+| `audio_stages[].stereotool.mpx_output` | string | `""` | The named output for the composite. Required with `mpx`; refused if its `rate` is set below `192000` |
+| `audio_stages[].stereotool.rds` | bool | `true` | Put RDS into the composite |
 
 !!! danger "The Stereo Tool GUI is an unauthenticated on-air control surface"
     It is off by default, restricted by the whitelist, and withdrawn entirely

@@ -163,7 +163,7 @@ This is not the broadcast dump delay. For build, dump, cough and censor, build a
 
 ## Processing
 
-A Stereo Tool processor belongs to a *source stage*, not to the encoder: build the stage on **Audio › Sources**, then pick the processed source here. The encoder's own `stereotool` keys exist in the configuration file for an inline processor, but the console does not edit them, and a stage is easier to share between several encoders.
+A Stereo Tool processor belongs to a *source stage*, not to the encoder: build the stage on **Audio › Sources**, then pick the processed source here. The encoder's own `stereotool` keys exist in the configuration file for an inline processor, but the console does not edit them, and a stage is easier to share between several encoders. An encoder that has one shows it on its card — **Stereo Tool · licensed · +85.3 ms**, **unlicensed · watermark** (its output carries Stereo Tool's watermark) or **bypassed** — and in its status as `stereotool`; a script can read it with `air.stereotool_status` and switch its bypass, live, with `air.stereotool_bypass`.
 
 ## Reading the card
 

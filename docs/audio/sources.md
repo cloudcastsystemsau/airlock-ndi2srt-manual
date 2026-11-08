@@ -122,10 +122,23 @@ processor and reports what the processor says back.
 | **Preset** | The full path to a `.sts` preset file on this box. Leave it empty to run the processor's defaults. |
 
 Once the stage is up, the card reports what the processor told it:
-`licence valid` or `unlicensed · watermarked`, the version, and the processing
-latency in samples. That latency figure is the fixed delay the processor adds —
-useful when you are lining up metadata or a second rail against the processed
-audio.
+
+* **licence: checking** until audio has passed through it — Thimeo's own
+  advice is that the processor's licence answer is not reliable before that;
+* then **licensed**, or **unlicensed · Stereo Tool watermark**: the settings in
+  use need a licence this key does not give, so Stereo Tool puts its own audible
+  watermark on the output. It is one answer for the whole processor; *what* it
+  is using unlicensed (for example `RuleBreaker Clipper, Auto EQ/Bass EQ and
+  Dynamic speed used without license`) is written to the log;
+* the version, and the processing **latency in milliseconds** (the samples on
+  hover) — the fixed delay the processor adds, useful when you are lining up
+  metadata or a second rail against the processed audio.
+
+These are read again every few seconds and a second after a preset or bypass
+change, so a preset changed in Stereo Tool's own web interface shows up here
+too. An audio encoder with its own Stereo Tool shows the same on its card:
+**Stereo Tool · licensed · +85.3 ms**, or **unlicensed · watermark**, or
+**bypassed**.
 
 A preset that fails to load is logged as `FAILED` and the stage keeps running on
 whatever the processor had. Check the path, and check that the file is readable
@@ -183,6 +196,104 @@ and it comes back on its own within a second of the instance becoming
 controllable again. A backup should not be offering an on-air processing
 surface for a plant it is not driving.
 
+## FM composite (MPX) and RDS
+
+A Stereo Tool stage can also do the transmitter's end of the chain. Turn on
+**MPX output** and Stereo Tool builds the **FM composite** — the mono and stereo
+multiplex, the 19 kHz pilot and the RDS data at 57 kHz — and Airlock plays it out
+of a sound-card output of its own, for a transmitter or an MPX-over-IP encoder.
+The stage's processed programme carries on to its consumers as before; the
+composite is an extra output.
+
+### Set it up
+
+1. On **Audio › Inputs & outputs**, add an output on a sound card that runs at
+   **192 kHz**, and set its **Sample rate** to **192 kHz (MPX)**. Use that output
+   for the composite only.
+2. On the stage card, tick **MPX output › Play the composite**, then pick the
+   output in **To**. The list marks each output with its rate; one that is not
+   set to 192 kHz says *not for MPX*.
+3. Leave **RDS › RDS encoder** ticked unless your transmitter adds its own RDS.
+4. Press **Save**.
+
+When it is running, the card shows **MPX → *output* · 192 kHz** and, with RDS
+on, the PS, PI and RadioText the encoder is sending right now.
+
+!!! note "The composite is never resampled"
+    Resampling an FM composite destroys the pilot and the RDS, so Airlock does
+    not do it. The output must run at the composite's own rate. Saving refuses
+    an output set below 192 kHz, and a device that will not open at 192 kHz
+    leaves the card at **MPX not playing** with the reason, for example
+    `MPX output "MPX" runs at 48000 Hz — the composite needs 192000 Hz`.
+
+MPX is a stage's, not an audio encoder's: an encoder's own Stereo Tool processes
+for its stream and has no composite to send.
+
+### Licence and Stereo Tool's own RDS
+
+FM processing is a licensed Stereo Tool feature. Without a key that covers it,
+the composite still plays — pilot, stereo and RDS all present, with your RDS —
+and Stereo Tool puts its watermark on the audio. The card says
+**unlicensed · Stereo Tool watermark**.
+
+Until you give it a PS and RadioText, Stereo Tool sends **its own**: a PS that
+cycles `STEREO` · `TOOL` · `WWW.STEREOTOOL.COM` · the time, and a RadioText about
+Thimeo, with PI `FFFF`. Set the station's RDS in the stage's preset, or from a
+script when the stage starts.
+
+### RDS from a script or REST
+
+Every RDS setting can be changed while the stage runs, from a script —
+
+```lua
+air.rds_ps("fm", "AIRLOCK")
+air.rds_rt("fm", "Now playing: " .. artist .. " - " .. title)
+air.rds_set("fm", "pi", "C201")
+air.rds_set("fm", "ta", true)
+local r = air.rds_status("fm")   -- r.mpx_playing, r.mpx_rate, r.fields.ps ...
+```
+
+— or over REST with `POST /api/audio-sources/<stage>/rds?field=ps&value=AIRLOCK`
+(an operator's call, audited as `audio_stage.rds`, and refused on a locked
+backup). The stage is named by its ID, as on its card.
+
+| Field | Takes |
+|---|---|
+| `ps` | Programme Service name: up to 8 characters, or Stereo Tool's timed form `2s:NAME/2s:SHOW` |
+| `rt` | RadioText: up to 64 characters (now playing), or the timed form |
+| `pi` | Programme Identification: hex like `C201` or a number |
+| `pty` | Programme Type, 0–31 |
+| `dynamic_pty` | dynamic PTY flag, true/false |
+| `tp` | Traffic Programme flag, true/false |
+| `ta` | Traffic Announcement flag, true/false |
+| `music` | music (true) or speech (false) |
+| `rt_enabled` | send RadioText, true/false |
+| `ct` | send clock time, true/false |
+| `artificial_head`, `compressed` | decoder identification flags, true/false |
+| `af1` … `af25` | alternative frequencies, MHz like `98.5` (`0` = none) |
+| `af_method`, `af_b_tuning` | AF list method (`0` = A, `1` = B); for method B, the tuning frequency the list belongs to, MHz |
+| `long_ps_enabled`, `long_ps` | send a long PS; its text, up to 32 characters |
+| `ptyn_enabled`, `ptyn` | send a PTY name; the name, up to 8 characters |
+| `ecc_enabled`, `ecc` | send the Extended Country Code; the code |
+| `ta_timeout_enabled`, `ta_timeout` | end a TA on its own; after this many seconds |
+| `ews_enabled`, `ews` | send Emergency Warning System data; the data |
+| `pin_enabled`, `pin_day`, `pin_hour`, `pin_minute` | send the Programme Item Number; its day, hour and minute |
+| `lan_enabled`, `lan` | send the language code; the code |
+| `group_sequence_enabled`, `group_sequence`, `extended_group_sequence` | use your own group sequence; the sequences, in Stereo Tool's form |
+| `rds_on` | the RDS encoder in the composite, true/false |
+| `rds_level` | RDS injection level, % (Stereo Tool's default 4.5) |
+| `stereo` | the stereo encoder (pilot and 38 kHz), true/false |
+| `pilot_level` | pilot level, % (Stereo Tool's default 9) |
+| `rds2_on`, `rds2_level` | the RDS2 encoder (extra subcarriers); its level, % (default 3.5) |
+| `rds2_logo`, `rds2_logo_type` | the RDS2 station logo — an image file's full path on this box — and its type |
+
+An unknown field is refused with the list above. A value goes to the running
+processor; it is **not** saved with the stage. A restart of the stage — or a
+backup taking over, whose processor never saw the call — starts from the
+preset's RDS, so keep the station's fixed RDS (PI, PS, PTY, AFs) in the
+preset and let the script send what changes, such as the RadioText on every
+song.
+
 ## Using a stage
 
 A stage's output is a source like any other. Pick it:
@@ -227,6 +338,9 @@ immediately.
 | Web UI | **Web UI** | `audio_stages[].stereotool.web_enable` | `false` | Offer the processor's own browser tuner for this stage. |
 | Port | **Port** | `audio_stages[].stereotool.web_port` | `0` | The tuner's port. `0` = pick a free one and report it. |
 | Allow from | **Allow from** | `audio_stages[].stereotool.web_whitelist` | `127.0.0.1/32` | CIDR range allowed to reach the tuner. |
+| MPX output | **MPX output › Play the composite** | `audio_stages[].stereotool.mpx` | `false` | Build the FM composite and play it out of `mpx_output`. Stages only. |
+| To | **To** | `audio_stages[].stereotool.mpx_output` | `""` | The named output the composite plays out of. Required with `mpx`; it must not be set below 192 kHz. |
+| RDS | **RDS › RDS encoder** | `audio_stages[].stereotool.rds` | `true` | Put RDS into the composite. Off when the transmitter adds its own. |
 
 ```json
 {
@@ -255,7 +369,9 @@ immediately.
 
 `GET /api/audio-sources` returns two things: `sources`, a row per stage with its
 run state, in/out meters, rate, consumers and processor state (loaded, version,
-licence validity, latency, bypass, web port); and `list`, every pickable source
+licence validity, latency, bypass, web port, and with MPX on whether the
+composite is playing, at what rate or why not, and the RDS fields as the
+processor holds them); and `list`, every pickable source
 on the box as `{ id, label, kind }` where `kind` is `input`, `stage` or `delay`.
 That list is what every source picker in the console is built from.
 
@@ -275,9 +391,11 @@ and the folder for this box: copy that file there (or point
 few seconds. If it still says so, check the architecture matches the Airlock
 build. Audio is passing through untouched in the meantime.
 
-**`unlicensed · watermarked`.**
-No key, or a key the processor rejected. The audio on air carries Thimeo's
-watermark. Enter the key in **Licence** and save.
+**`unlicensed · Stereo Tool watermark`.**
+No key, a key the processor rejected, or a preset that uses features the key
+does not cover. The audio carries Thimeo's watermark. The log names the
+features; enter a key that covers them in **Licence** and save, or choose a
+preset that does not use them.
 
 **The in and out meters look identical.**
 Processing is not in the path. Check **Mode** is **Process**, check the library
@@ -303,3 +421,16 @@ blocking the port.
 **Audio clicked when I saved.**
 Saving a stage rebuilds it. That is expected; do processing edits off air, or on
 a stage nothing is currently airing.
+
+**The card says MPX not playing.**
+The note beside it says why. `is not open yet` — the output has not opened; check
+it on **Audio › Inputs & outputs**. `runs at 48000 Hz — the composite needs
+192000 Hz` — set the output's **Sample rate** to **192 kHz (MPX)**, on a card
+that runs at 192 kHz. `this Stereo Tool library has no FM path` — the library
+on this box is a build without FM processing; use the full generic plugin.
+
+**The receiver shows STEREO TOOL or WWW.STEREOTOOL.COM instead of the station name.**
+That is Stereo Tool's own default RDS: nothing has set a PS yet. Put the
+station's RDS in the stage's preset, or send it from a script
+(`air.rds_ps("fm", "MY FM")`) — a value set from a script lasts until the stage
+restarts.

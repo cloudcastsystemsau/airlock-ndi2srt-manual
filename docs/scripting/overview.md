@@ -147,7 +147,7 @@ The editor completes as you type:
 | Where the caret is | What it offers |
 |---|---|
 | After `air.` (or `air:`) | Every host call this build answers, with its arguments; the highlighted one shows what it does. The list comes from the server, so it is always the engine's own. |
-| Inside a string argument of a host call | The names that argument takes on **this box**: `delay` / `encoder` / `decoder` for a channel's block; the audio delays and stages for `air.audio_build("…")`; for `air.audio_enable("encoder", "…")` the audio **encoders**, following the kind already typed; data senders for `air.send_data`; script variables for `air.get_var`; stage ids for `air.stereotool_bypass`; the configured URLs for `air.webhook`. |
+| Inside a string argument of a host call | The names that argument takes on **this box**: `delay` / `encoder` / `decoder` for a channel's block; the audio delays and stages for `air.audio_build("…")`; for `air.audio_enable("encoder", "…")` the audio **encoders**, following the kind already typed; data senders for `air.send_data`; script variables for `air.get_var`; every Stereo Tool — processing stages and encoders with their own — for `air.stereotool_bypass`, `air.stereotool_status` and `air.stereotool_latency`; the configured URLs for `air.webhook`. |
 | In a string compared with `args.event` or `event` | The event words: `EnteredDelayed`, `Dumped`, `CoughOn`, `Connected`, `CallState`, … |
 | Anywhere else, after two letters | The language's keywords, and `air`. |
 
@@ -159,6 +159,32 @@ On the right:
 - **Script** — **Language** and **Entry function**;
 - **Versions** — a **Note for v*n***, the history, and **View** / **Roll back** / **Load into editor** on each stored version;
 - **Host API** — a short crib sheet. The full reference is in [Host API](api.md).
+
+### Names for scripts
+
+Most host calls take an ID — a channel number, or the name of an audio block, a
+stage, a Stereo Tool, a data sender, a variable or a webhook URL. The **Names
+for scripts** card beside the editor lists every one this box has, grouped:
+
+| Group | The ID | A call to start from |
+|---|---|---|
+| Channels | the channel number, with the block word `"delay"`, `"encoder"` or `"decoder"` | `air.build(1)`, `air.start(1, "encoder")` |
+| Audio delays | the delay's name | `air.audio_build("FM Breakfast")` |
+| Audio encoders / decoders | the block's name | `air.audio_enable("encoder", "Studio A RTP")`, `air.dial(...)` for SIP |
+| Processing stages | the stage's **id** (not its display name) | `air.audio_enable("stage", "breakfast")` |
+| Stereo Tool | a Stereo Tool stage's id, or an encoder's name when it has its own | `air.stereotool_status("breakfast")` |
+| Data senders | the sender's name | `air.send_data("Now playing", "message")` |
+| Variables | the variable's name | `air.get_var("show")` |
+| Webhook URLs | the configured URL | `air.webhook({ text = "…" }, "https://…")` |
+
+![The Names for scripts card, narrowed to "breakfast"](../img/scripting/names-for-scripts.png){ .shot }
+
+Type in **Find a name…** to narrow the list. **Copy ID** copies the ID;
+**Insert** puts the example call at the editor's cursor, in the script's
+language. Each block's own settings view shows the same thing: a **Script ID**
+chip with the ID, a copy button and the calls that take it — on a channel's
+delay, encoder and decoder settings pages, and on every audio encoder, decoder,
+audio delay and processing stage card.
 
 ### Variables
 

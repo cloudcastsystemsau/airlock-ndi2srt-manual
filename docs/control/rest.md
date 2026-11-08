@@ -383,6 +383,7 @@ See [Panel page](panel.md) and [Axia GPIO](gpio.md).
 | `GET` | `/api/audio-delays` | a row per audio delay: state, depth, target, max, safe/idle, dumps, cough/censor flags and the tally lamps |
 | `POST` | `/api/audio-delays/{name}/{action}` | drive one audio delay |
 | `POST` | `/api/audio-sources/{id}/{action}` | drive a stage's profanity delay |
+| `POST` | `/api/audio-sources/{id}/rds?field=&value=` | set one RDS field on a Stereo Tool stage's FM composite, on the running processor — see [FM composite and RDS](../audio/sources.md#rds-from-a-script-or-rest). `400` names the fields when `field` is unknown |
 
 `{action}` is one of:
 
@@ -398,6 +399,7 @@ An unknown action is `400` naming the set; an unknown name is `404`.
 ```bash
 curl -s -X POST "http://localhost:8090/api/audio-delays/studio-dump/dump"
 curl -s -X POST "http://localhost:8090/api/audio-delays/studio-dump/cough?down=true"
+curl -s -X POST "http://localhost:8090/api/audio-sources/fm/rds?field=rt&value=Now%20playing%3A%20Track"
 ```
 
 ---
