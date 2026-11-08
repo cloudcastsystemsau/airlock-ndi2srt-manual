@@ -192,8 +192,8 @@ What the output airs when there is no delayed programme to air.
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `…delay.fill.video` | string | `"freeze"` | `freeze` (hold the last frame), `black`, `image`, `clip`, or `ndi` (a live source, scaled to the raster) |
-| `…delay.fill.image_path` | string | `""` | PNG or JPEG slate, letterboxed to the output raster |
-| `…delay.fill.clip_path` | string | `""` | A looped `.ts` file — H.264 or HEVC with AAC, read by the built-in decoders |
+| `…delay.fill.image_path` | string | `""` | PNG or JPEG slate, letterboxed to the output raster. Must be in the asset library (`<config dir>/assets`) — a save naming a file elsewhere is refused |
+| `…delay.fill.clip_path` | string | `""` | A looped `.ts` file — H.264 or HEVC with AAC, read by the built-in decoders. Asset library only, as above |
 | `…delay.fill.ndi_source` | string | `""` | The live NDI source for `video: ndi` |
 | `…delay.fill.audio` | string | `"silence"` | `silence`, `tone`, `clip` (the clip's own audio), `ndi` (the live source's audio), or `mute` (no audio frames at all) |
 | `…delay.fill.tone_hz` | float | `1000.0` | Tone frequency |

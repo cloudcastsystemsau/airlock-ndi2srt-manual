@@ -402,6 +402,20 @@ curl -s -X POST "http://localhost:8090/api/audio-delays/studio-dump/cough?down=t
 
 ---
 
+## Asset library — operator
+
+| Method | Path | Body / parameters | Does |
+|---|---|---|---|
+| `GET` | `/api/assets` | — | `{dir, assets:[{name, path, kind, bytes, modified, used_by:[{setting, active}]}]}` |
+| `POST` | `/api/assets` | `?name=<file>`, body = the file (`application/octet-stream`) | upload into the library; returns `{ok, name, path, kind, bytes, probe}` (`probe` for an image or clip) |
+| `POST` | `/api/assets/import` | `{path}` | copy a file on the box into the library |
+| `GET` | `/api/assets/file/{name}` | — | the file, with its content type |
+| `DELETE` | `/api/assets/item/{name}` | — | delete it; `409 {error, used_by}` while a setting names it |
+
+See [The asset library](../assets/library.md).
+
+---
+
 ## Fill assets — operator
 
 | Method | Path | Body / parameters | Does |

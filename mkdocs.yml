@@ -93,6 +93,8 @@ nav:
       - Audio encoders: audio/encoders.md
       - Audio decoders: audio/decoders.md
       - RTP and SIP calls: audio/rtp-sip.md
+  - Assets:
+      - The asset library: assets/library.md
   - Control:
       - Operating the delay: control/operating.md
       - Panel page: control/panel.md

@@ -152,7 +152,9 @@ catch something with **Post-cough** or **Post-censor** before it airs. Leave
   When the depth is reached, the output crossfades to the now-delayed live
   programme.
 
-The fill asset is any file the box's `ffmpeg` can decode. If it cannot be
+The fill asset is an audio file uploaded to the box's [asset library](../assets/library.md)
+— pick it from the list beside **Fill asset**, or **Upload…** one; there is no
+typed path. Any file the box's `ffmpeg` can decode plays. If it cannot be
 decoded, the build is silent and the log says so.
 
 **Fill schedule** dayparts the asset: the first row whose days and window match
@@ -347,7 +349,7 @@ REST, TCP and GPIO.
 | Rollout window | **Rollout xfade** | `audio_delays[].rollout_overlap_ms` | `250` | Equal-power crossfade length for a rollout exit, 0–10000 ms. |
 | Build mode | **Build mode** | `audio_delays[].build_mode` | `expand` | `expand` (stretch the live programme) or `insert` (air a fill while the ring fills). |
 | Fill strategy | **Fill** | `audio_delays[].fill_strategy` | `squeeze` | `squeeze` (stretch the asset to span the build) or `silent`. |
-| Fill asset | **Fill asset** | `audio_delays[].fill_asset` | `""` | A file `ffmpeg` can decode, aired during an insert build. |
+| Fill asset | **Fill asset** | `audio_delays[].fill_asset` | `""` | An uploaded audio file from the [asset library](../assets/library.md), aired during an insert build. |
 | Fill schedule | **Fill schedule** | `audio_delays[].fill_schedule[]` | `[]` | Dayparted fill assets: `{ days, start, end, asset }`. |
 | Join crossfade | **Join xfade** | `audio_delays[].crossfade_ms` | `20` | Crossfade over a dump join. 10–30 ms is the useful range; anything above 100 ms is clamped. |
 | Channels | **Channels** | `audio_delays[].channels` | `2` | `1` or `2`. Set it to match the source: the ring carries whatever the source delivers. |
@@ -358,7 +360,7 @@ REST, TCP and GPIO.
 | Underfill | **Underfill** | `audio_delays[].censor_underfill_ms` | `100` | Start the cover this much earlier, ms. |
 | Overfill | **Overfill** | `audio_delays[].censor_overfill_ms` | `100` | End the cover this much later, ms. |
 | Censor cover | **Censor cover** | `audio_delays[].censor_strategy` | `tone` | `tone`, `silence` or `file`. |
-| Censor asset | **Censor asset** | `audio_delays[].censor_asset` | `""` | The looped file aired when the cover is `file`. |
+| Censor asset | **Censor asset** | `audio_delays[].censor_asset` | `""` | The uploaded audio file looped when the cover is `file`. |
 | Censor schedule | **Censor schedule** | `audio_delays[].censor_schedule[]` | `[]` | Dayparted censor assets, same shape as the fill schedule. |
 | Dump strategy | — | `audio_delays[].dump_strategy` | `dump` | Reserved. `dump` or `censor` is accepted and validated; only `dump` has an effect today. |
 | Licence | — | `audio_delays[].licence_assigned` | `true` | Marks the block for the `ADELAY` pool. |

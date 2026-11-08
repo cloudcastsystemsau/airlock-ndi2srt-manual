@@ -42,7 +42,8 @@ another channel**, pick the target and select **Copy**, then **Save changes**.
 
 1. Select the channel in the left-hand list.
 2. In the **Default fill** card, pick a tile under **Picture**.
-3. Fill in the asset field the tile reveals (a file path or an NDI source).
+3. Choose what the tile asks for: an uploaded image or clip from the list (or
+   **Upload…** one), or an NDI source from the ones this box can see.
 4. Pick a **Sound**, and set **Frequency** and **Level** if you chose the tone.
 5. Select **Save changes**.
 
@@ -89,13 +90,12 @@ fill**. A clip whose audio the engine cannot decode is marked on this page when
 ### To upload and check a clip or slate
 
 1. Choose **Clip** or **Still image** under **Picture**.
-2. Select **Upload…** beside the file field and pick the file. It is streamed to
-   the box's asset store beside the configuration, and the path field is filled
-   in for you.
+2. Select **Upload…** beside the list and pick the file. It is streamed into the
+   box's [asset library](../assets/library.md) and selected.
 3. Read the verdict under the field.
 4. Select **Save changes**.
 
-To check a path you typed yourself, select **Check** instead.
+To check a file already in the library, select it and press **Check**.
 
 The verdict is the engine's own probe — the file read the way the player reads
 it, so what it says will play, plays:
@@ -143,8 +143,11 @@ matching daypart wins; outside every daypart the default fill airs.
 1. In the **Weekly schedule** card, select **Fill daypart**.
 2. Name the row, pick its days with the day buttons, and type the **from** and
    **to** times as `HH:MM`.
-3. Choose its **Picture** and, for an image, clip or NDI fill, type the path or
-   source name.
+3. Choose its **Picture** and, for an image or clip, pick one from the
+   [asset library](../assets/library.md) (or **Upload…**). A daypart's clip has
+   the same **Check** and **Make it fit** as the default fill. For an NDI fill,
+   pick the source from the list of the ones this box can see. A saved source
+   that is not on the network right now stays selected and says so.
 4. Choose its **Sound**.
 5. Select **Save changes**.
 
@@ -176,6 +179,15 @@ The same card carries **Censor windows · censor engages on its own** — daypar
 that hold the censor on without anyone pressing anything. They use the same row
 shape and the same first-match rule. They are covered in
 [Censor, cough and slate](censor.md#scheduled-censor-dayparts).
+
+## The asset library
+
+Every file a fill or a censor plays comes from the box's **asset library** — the
+`assets` folder beside the configuration — and every image and clip setting on
+this page is a list of what is in it, with **Upload…** beside it. The top-level
+**Assets** page uploads several files at once, previews them, lists the settings
+that use each one, and deletes what nothing uses. A save that names a file
+outside the library is refused. See [The asset library](../assets/library.md).
 
 ## Dissolves
 
@@ -242,9 +254,9 @@ it, and the background thread re-prepares whatever changed.
 | Setting | Console label | Config key | Default | Meaning |
 |---|---|---|---|---|
 | Picture | Picture | `delay.fill.video` | `freeze` | `freeze`, `black`, `image`, `clip` or `ndi` |
-| Image file | Image file | `delay.fill.image_path` | `""` | the slate; PNG or JPEG, letterboxed to the output raster |
-| Clip file | Clip file | `delay.fill.clip_path` | `""` | the loop; an MPEG-TS of H.264 constrained baseline or HEVC, with AAC audio |
-| NDI source | NDI source | `delay.fill.ndi_source` | `""` | the live fill source's NDI name |
+| Image | Image | `delay.fill.image_path` | `""` | the slate; an uploaded PNG or JPEG from the asset library, letterboxed to the output raster |
+| Clip | Clip | `delay.fill.clip_path` | `""` | the loop; an uploaded MPEG-TS of H.264 constrained baseline or HEVC, with AAC audio |
+| NDI source | NDI source | `delay.fill.ndi_source` | `""` | the live fill source, chosen from the NDI sources this box sees |
 | Sound | Sound | `delay.fill.audio` | `silence` | `silence`, `tone`, `clip`, `ndi` or `mute` |
 | Frequency | Frequency | `delay.fill.tone_hz` | `1000.0` | tone frequency, 20–20000 Hz |
 | Level | Level | `delay.fill.tone_dbfs` | `-18.0` | tone level, −90 to 0 dBFS peak |

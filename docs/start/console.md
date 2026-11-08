@@ -22,7 +22,7 @@ line saying what it does.
 | Part | What it does |
 |---|---|
 | **AIRLOCK · NDI2SRT** | The brand mark is the home button. Home is **Operations**. |
-| Main nav | **Operations · Video · Audio · Data · Scripting · Alarms · Server** |
+| Main nav | **Operations · Video · Audio · Assets · Data · Scripting · Alarms · Server** |
 | Alarms pill | *No alarms*, or *n alarms · n critical*. Click it to open **Alarms**. Green, amber or red. |
 | Licence pill | **Unlicensed · output watermarked**, shown only when this box has no valid licence. |
 | GPIO pill | **GPIO on** or **GPIO down**, shown only when the GPIO client is enabled. |
@@ -40,7 +40,7 @@ Three sections carry a sub-nav of their own, and two build one from the page:
 | **Scripting** | Scripts · Variables · Live log · Engine settings — Scripts and Variables carry a count |
 | **Server** | General · NDI · Email & alerts · Authentication · Users · API access · Panel · Licence · Telemetry · Redundancy · Audit log · Configuration |
 
-**Operations**, **Alarms** and **Account** have no sub-nav.
+**Operations**, **Assets**, **Alarms** and **Account** have no sub-nav.
 
 ### The address is the hash
 
@@ -52,6 +52,7 @@ button works.
 | `#/` | Operations |
 | `#/delay` `#/encoders` `#/decoders` `#/fills` | the Video pages |
 | `#/audio-io` `#/audio-sources` `#/audio-encoders` `#/audio-decoders` `#/audio-delay` | the Audio pages |
+| `#/assets` | the asset library |
 | `#/data` `#/gpio` | the Data pages |
 | `#/scripts` `#/variables` `#/script-log` `#/script-engine` `#/script/<name>` | the Scripting pages |
 | `#/alarms` `#/account` | Alarms and Account |
@@ -238,6 +239,15 @@ anything.
 ![Audio inputs and outputs](../img/audio/io.png){ .shot }
 
 Each of these has its own chapter under [Audio](../audio/io.md).
+
+## Assets
+
+The box's library of images, clips and audio files: the only files a fill, a
+daypart or an audio delay's fill and censor may play. Drop several files at once
+on **Upload**; each row of the library shows a preview (a picture, or a play
+button for audio), **Check** for a clip, every setting that uses the file, and
+**Delete**, which is greyed out while anything uses it. See
+[The asset library](../assets/library.md).
 ## Data
 
 **Receivers & routes** is where automation data comes in, is held in a channel's
@@ -337,6 +347,7 @@ In detail:
 | Build, dump, rollout, set depth, dissolves | | yes | yes |
 | Enable, disable, start, stop a block | | yes | yes |
 | Censor, cough, slate, cues | | yes | yes |
+| See, upload and delete assets | | yes | yes |
 | Take and give back the channel lock | | yes | yes |
 | Reset statistics | | yes | yes |
 | Save the configuration | | | yes |
