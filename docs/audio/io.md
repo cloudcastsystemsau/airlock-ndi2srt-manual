@@ -149,6 +149,28 @@ Use `hw:C,D` for a real card — it is exclusive and glitch-free. `default` goes
 through the system mixer, which may resample and may be shared with other
 software.
 
+Devices the box's ALSA configuration defines are listed too, after the cards —
+anything in `/etc/asound.conf`, `/etc/alsa/conf.d/` or the service account's
+`~/.asoundrc`: a `dmix`/`dsnoop`, a PipeWire or PulseAudio bridge, JACK, or the
+endpoints of an AES67 driver such as the CloudCast `ccs67` plug-in
+(`aes67_in_1` … `aes67_out_1`). Each is offered as an input, an output or both
+according to whether it opens that way, so a device meant for one direction
+should be defined for one direction — wrap it in an `asym` with only a
+`capture.pcm` or only a `playback.pcm`:
+
+```text
+pcm.aes67_in_1 {
+    type asym
+    capture.pcm { type ccs67 endpoint 0 }
+    hint { show on description "AES67 In 1" }
+}
+```
+
+The JACK, PipeWire and PulseAudio bridges are listed without being opened —
+opening JACK can start a server — so their channel count shows only once an
+input uses them. The templates ALSA generates for every card (`front:CARD=…`,
+`hdmi:CARD=…`, `plughw:CARD=…`), `null` and the rate converters are left out.
+
 `Channels: 0` asks the card what it supports and opens that many. Some cards —
 USB interfaces and the ALSA loopback in particular — insist on an exact count;
 give them the number explicitly.
