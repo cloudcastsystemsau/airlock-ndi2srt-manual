@@ -927,13 +927,14 @@ source.
 | `audio_delays[].build_rate_pct` | float | `4.0` | How fast the delay grows, as a percent of real time (1–10). Time-stretched with pitch kept |
 | `audio_delays[].exit_rate_pct` | float | `4.0` | How fast it drains on exit (1–10) |
 | `audio_delays[].start_mode` | string | `"build"` | `bypass`, `build` or `full` — the state on start |
-| `audio_delays[].auto_rebuild` | bool | `true` | After a dump, build again toward the previous depth |
 | `audio_delays[].crossfade_ms` | float | `20.0` | Crossfade at a dump or jump join (10–30) |
-| `audio_delays[].exit_mode` | string | `"compress"` | `compress` (drain by speeding up) or `rollout` (crossfade to live) |
+| `audio_delays[].exit_mode` | string | `"compress"` | `compress` (drain by speeding up), `rollout` (crossfade to live) or `playout` (the tail airs at normal speed, live joins for `rollout_overlap_ms`) |
 | `audio_delays[].rollout_overlap_ms` | float | `250.0` | Equal-power crossfade window for a rollout exit |
-| `audio_delays[].build_after_dump` | string | `"both"` | Rebuild after a dump: `disabled`, `dump`, `dumpall` or `both` |
+| `audio_delays[].rollout_return_output` | string | `""` | With `exit_mode: "playout"`: a named output carrying the tail alone (no live, no censor) while it plays out, silent otherwise |
+| `audio_delays[].build_after_dump` | string | `"both"` | Rebuild after a dump: `both` (any dump), `dump`, `dumpall` or `disabled` (stay at what is left). A document carrying the old `auto_rebuild: false` loads as `disabled` |
 | `audio_delays[].build_mode` | string | `"expand"` | `expand` stretches the live programme slower; `insert` airs a fill asset while the ring fills, then crossfades to live |
-| `audio_delays[].fill_strategy` | string | `"squeeze"` | For an insert build: `squeeze` (play the asset stretched to span the build) or `silent` |
+| `audio_delays[].fill_strategy` | string | `"squeeze"` | For an insert build: `squeeze` (play the asset stretched to span the build), `silent`, or `input` (air `fill_input` live) |
+| `audio_delays[].fill_input` | string | `""` | With `fill_strategy: "input"`: the audio input or processed stage aired during an insert build — not the delay's own source |
 | `audio_delays[].fill_asset` | string | `""` | The fill asset aired during an insert build. Any file ffmpeg can decode |
 | `audio_delays[].dump_strategy` | string | `"dump"` | `dump` (discard) or `censor` (dump-fill) |
 | `audio_delays[].censor_seconds` | float | `7.0` | Default one-shot censor length |

@@ -47,7 +47,7 @@ Each row is one file:
 
 | Column | What it shows |
 |---|---|
-| **Preview** | A thumbnail of an image; a play button for an audio file (one plays at a time, press again to stop); an icon for a clip. |
+| **Preview** | A thumbnail: the picture itself, a clip's first picture, or an audio icon. Click it to open the viewer. |
 | **File** | The name, kind, size and when it was uploaded. An image or clip has **Check**: the engine's own verdict on the file, with **Make it fit** when a clip will not play and the box has `ffmpeg`. |
 | **Used by** | Every setting that names the file. A setting that is not in force — a daypart that is switched off, a slate while the picture is a clip, a censor file while the censor plays a tone — is marked **(off)**. |
 | **Delete** | Press **Delete**, then **Delete for good** within four seconds. |
@@ -63,6 +63,26 @@ because switching the setting back on would air a missing file. Its **Delete**
 is greyed out. Point those settings at another file first, save, and then
 delete it. The server refuses the same thing with `409` and the list of
 settings.
+
+## The viewer
+
+Click a file's thumbnail to open it in the viewer. **←** and **→** step through
+the library as it is filtered, **Space** plays and pauses, and **Esc** or a click
+outside closes it.
+
+![The viewer playing a clip, decoded by the box](../img/assets/viewer-clip.png){ .shot }
+
+| File | What the viewer does |
+|---|---|
+| Picture | Shows it fitted to the window, with its size in pixels. **Actual size**, or a click on the picture, shows it pixel for pixel; scroll to move around it. |
+| Clip (`.ts`, `.m2ts`, `.mts`) | Plays it with its sound, with **Play**/**Pause**, a position bar and the time. The box decodes it with the fill's own decoder, so it shows what will air: pictures the decoder refuses are missing, and a clip whose sound the engine cannot decode is marked **silent on air**. No ffmpeg is needed. The pictures are 960 × 540 and are prepared in the background; playback starts at once, and **preparing pictures** shows how far the box has got. The viewer covers the first two minutes of a longer clip. |
+| Clip (`.mp4`, `.mov`, `.mkv`) | Plays it in the browser's own player, when the browser can. A fill does not play these files as they are: **Check** the clip and **Make it fit**. |
+| Audio | Plays it with the browser's player: play, pause, position and volume. AIFF, which Chrome and Firefox cannot play, is converted to WAV on the box for the viewer. |
+
+The pictures follow the sound's clock: the page asks the box for the picture
+due at each moment. On a slow link it shows fewer pictures, never late ones, so
+the picture and the sound stay together. A seek, or a pause and play, starts both
+again from the new point.
 
 ## The rule a save follows
 
@@ -104,7 +124,12 @@ library follows the primary's.
 | `GET` | `/api/assets` | — | the library: `dir`, and per file `name`, `path`, `kind`, `bytes`, `modified` and `used_by` (`[{setting, active}]`) |
 | `POST` | `/api/assets` | `?name=<file>`, body = the file | upload into the library; a clip is probed and the verdict returned |
 | `POST` | `/api/assets/import` | `{path}` | copy a file on the box into the library |
-| `GET` | `/api/assets/file/{name}` | — | the file itself (previews) |
+| `GET` | `/api/assets/file/{name}` | — | the file itself; honours `Range`, so a player can seek |
+| `GET` | `/api/assets/preview/{name}` | — | what the viewer can show: `engine` (a transport-stream clip the box decodes), and for one of those `duration_s`, `shown_s`, `fps`, `audio`, `audio_note`, `decoded_s`, `done`, `warning`, `error`. Opening it starts the decode |
+| `GET` | `/api/assets/preview/{name}/poster.jpg` | — | a clip's first picture, 320 × 180 |
+| `GET` | `/api/assets/preview/{name}/video.mjpg` | `?from=<s>` | the clip's pictures from that point, each sent on its time (`multipart/x-mixed-replace`) |
+| `GET` | `/api/assets/preview/{name}/frame.jpg` | `?t=<s>` | the picture at that point |
+| `GET` | `/api/assets/preview/{name}/audio.wav` | — | the clip's sound as WAV, aligned to its first picture; for an AIFF file, the file as WAV. Honours `Range` |
 | `DELETE` | `/api/assets/item/{name}` | — | delete it; `409 {error, used_by}` while a setting names it |
 
 The per-channel routes under `/api/channels/{n}/fill/assets` (upload, `probe`,

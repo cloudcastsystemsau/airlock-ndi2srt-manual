@@ -377,8 +377,8 @@ See [Panel page](panel.md) and [Axia GPIO](gpio.md).
 
 | Method | Path | Does |
 |---|---|---|
-| `GET` | `/api/audio-encoders` | a row per audio encoder: codec, rate, channels, frames, bytes, meter, and the `srt` link state |
-| `GET` | `/api/audio-decoders` | the same for decoders |
+| `GET` | `/api/audio-encoders` | a row per audio encoder: codec, rate, channels, frames, bytes, meter, the `srt`/`rtp`/`sip` detail, and `link` — `{transport, state, up, detail, for_s, kbps, counters, error}` in one shape for every transport (HLS: upload counters) |
+| `GET` | `/api/audio-decoders` | the same for decoders, `link` describing the receive side |
 | `GET` | `/api/audio-sources` | processing stages: Stereo Tool state, meters, consumers, and any profanity delay on the stage |
 | `GET` | `/api/audio-delays` | a row per audio delay: state, depth, target, max, safe/idle, dumps, cough/censor flags and the tally lamps |
 | `POST` | `/api/audio-delays/{name}/{action}` | drive one audio delay |
@@ -409,7 +409,9 @@ curl -s -X POST "http://localhost:8090/api/audio-delays/studio-dump/cough?down=t
 | `GET` | `/api/assets` | — | `{dir, assets:[{name, path, kind, bytes, modified, used_by:[{setting, active}]}]}` |
 | `POST` | `/api/assets` | `?name=<file>`, body = the file (`application/octet-stream`) | upload into the library; returns `{ok, name, path, kind, bytes, probe}` (`probe` for an image or clip) |
 | `POST` | `/api/assets/import` | `{path}` | copy a file on the box into the library |
-| `GET` | `/api/assets/file/{name}` | — | the file, with its content type |
+| `GET` | `/api/assets/file/{name}` | — | the file, with its content type; honours `Range` |
+| `GET` | `/api/assets/preview/{name}` | — | what a preview can show; for a `.ts` clip starts the box's decode and reports `duration_s`, `shown_s`, `fps`, `audio`, `decoded_s`, `done` |
+| `GET` | `/api/assets/preview/{name}/{part}` | `poster.jpg`, `frame.jpg?t=`, `video.mjpg?from=`, `audio.wav` | a clip's poster, one picture, its pictures as a timed JPEG stream, its sound as WAV (or an AIFF as WAV) |
 | `DELETE` | `/api/assets/item/{name}` | — | delete it; `409 {error, used_by}` while a setting names it |
 
 See [The asset library](../assets/library.md).

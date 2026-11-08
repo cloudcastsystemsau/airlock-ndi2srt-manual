@@ -91,8 +91,24 @@ The file names it recognises are the ones Thimeo ships:
 | macOS | `libStereoTool_64.dylib` |
 
 If no library is found, the stage still runs and passes audio through untouched.
-The card shows a warning banner saying the library did not load, and the log says
-so once. Nothing drops off air because Stereo Tool is missing.
+The card shows a warning banner naming the file this box needs and the folder to
+put it in — for example *copy `libStereoTool_64.dll` into `C:\Program
+Files\ndi2srt` (beside ndi2srt)* — and the log says the same once. Nothing drops
+off air because Stereo Tool is missing.
+
+**No restart is needed.** A running stage looks for the library again every few
+seconds and changes over to Stereo Tool when it appears. Loading takes from a second to several seconds
+(about 10 s end to end on a Windows desktop) — the card says **Stereo Tool is loading** meanwhile — and happens beside
+the audio, which keeps passing through until the engine is ready. An audio
+encoder with Stereo Tool picks the library up the next time it is started
+(disable and enable it).
+
+The library's code is loaded **once per process**; every stage and every
+encoder still makes **its own Stereo Tool instance** from it, with its own
+input, output, preset, licence, bypass and web port. Almost all of the start-up time
+is that instance — about 0.8 s measured on a Mac mini and about 6 s on a
+Windows desktop, against 0.07–0.15 s for the library itself — so it is paid for
+each stage and encoder.
 
 ### Licence and presets
 
@@ -252,12 +268,12 @@ is why input names must match across a redundant pair.
 
 ## Troubleshooting
 
-**The card says the library did not load.**
-Airlock could not find the Stereo Tool shared library. Check the file name
-against the table above, check it is beside the executable (or that
-`NDI2SRT_STEREOTOOL` points at the file, not the folder), and check the
-architecture matches the Airlock build. Audio is passing through untouched in
-the meantime.
+**The card says Stereo Tool's library is not on this box.**
+Airlock could not find the Stereo Tool shared library. The banner names the file
+and the folder for this box: copy that file there (or point
+`NDI2SRT_STEREOTOOL` at the file, not the folder) and it is picked up within a
+few seconds. If it still says so, check the architecture matches the Airlock
+build. Audio is passing through untouched in the meantime.
 
 **`unlicensed · watermarked`.**
 No key, or a key the processor rejected. The audio on air carries Thimeo's

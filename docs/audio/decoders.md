@@ -55,14 +55,25 @@ Decoded audio is conformed to the destination on the way out: the named output r
 
 Each card shows two states side by side.
 
-**In** — the incoming coded stream:
+**In** — the incoming link, in the transport's own terms, and the codec read
+from the stream:
 
 | Pill | Meaning |
 | --- | --- |
-| **`<codec>` · `<n>` kbps** | Receiving. The codec is the one read from the stream; the rate is what the SRT link is actually pulling. |
-| **`<codec>` · `<n>` kbps · `<n>` gaps** | Receiving, but groups have gone missing. See below. |
-| **no stream** | Running, but nothing has arrived. |
+| **SRT · connected** | The sender is connected. |
+| **SRT · listening** | A listener waiting for its sender. |
+| **SRT · connecting** / **retrying** | A caller trying to reach the sender's listener. |
+| **RTP · receiving** | Packets are arriving. |
+| **RTP · waiting for packets** / **stalled** | Nothing has arrived yet / packets stopped arriving. |
+| **SIP · in call** | A call is up. |
 | **stopped** | Not running — disabled, or it refused to start. |
+
+Under the header, a running decoder shows its **statistics strip**: **from**
+(the sender), **for** (time in this state), **rate** (measured), and the
+transport's counters — on SRT received, packets, lost, retransmitted, dropped,
+RTT and reconnects; on RTP packets, received, lost, late, reordered,
+duplicates, jitter and SSRC changes — plus the decoder's own frames, **gaps**
+and **concealed** frames.
 
 **Out** — a level meter on the decoded audio. The *in* side has no meter: a coded stream has no level until it is decoded.
 
@@ -76,7 +87,9 @@ A handful of gaps after a reconnect is normal. A gap count that climbs steadily 
 
 ### Status API
 
-`GET /api/audio-decoders` returns one row per block: `name`, `source`, `target`, `transport`, `running`, `connected`, `codec`, `channels`, `rate`, `frames`, `gaps`, `concealed`, `watermarked`, the meter, an `rtp` object on RTP and SIP, a `sip` object on SIP, the block's recent log lines, and an `srt` object with the link's own view — `connected`, `peer`, `recv_mbps`, packets received, lost, dropped and retransmitted, `reconnects` and `last_error`.
+`GET /api/audio-decoders` returns one row per block, each with a `link` object
+in the same shape as an encoder's (`transport`, `state`, `up`, `detail`,
+`for_s`, `kbps`, `counters`, `error`), and: `name`, `source`, `target`, `transport`, `running`, `connected`, `codec`, `channels`, `rate`, `frames`, `gaps`, `concealed`, `watermarked`, the meter, an `rtp` object on RTP and SIP, a `sip` object on SIP, the block's recent log lines, and an `srt` object with the link's own view — `connected`, `peer`, `recv_mbps`, packets received, lost, dropped and retransmitted, `reconnects` and `last_error`.
 
 `connected` on the row is the link's state, not the decoder's optimism: a listener that could not bind its port, or a caller nobody answers, reads `false` with the reason in `srt.last_error`.
 

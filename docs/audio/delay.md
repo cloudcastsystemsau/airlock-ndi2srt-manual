@@ -147,10 +147,26 @@ catch something with **Post-cough** or **Post-censor** before it airs. Leave
   output airs the **Fill**:
     - **Squeeze asset to span** — the fill asset, time-stretched to span exactly
       the build window and looped if it is short;
-    - **Silence**.
+    - **Silence**;
+    - **An input (external insert)** — a live input, picked under **Insert
+      input**: a music source, a jingle player, another studio. The delayed
+      programme is held back and the input goes to air for the build, then the
+      output crossfades to the delayed programme. This is
+      ProfanityDelayService's external insert. The input can be any audio input
+      or processed stage except the delay's own source, which would put the
+      presenter on air undelayed. A standby needs the same input name mapped to a
+      device.
 
   When the depth is reached, the output crossfades to the now-delayed live
   programme.
+
+  An insert build only happens when the delay builds **from live** — from
+  nothing, or from 10 % of the depth or less: at start-up, and when **Build** is
+  pressed with the output live. A **rebuild after a dump or a cough expands**,
+  even in insert mode, so the programme is never taken off air for fill or
+  silence in the middle of a show. This is what ProfanityDelayService does.
+  The **At these settings** panel on the Build tab shows both times: the depth in
+  real time for a build from live, and the expand time for a rebuild.
 
 The fill asset is an audio file uploaded to the box's [asset library](../assets/library.md)
 — pick it from the list beside **Fill asset**, or **Upload…** one; there is no
@@ -165,26 +181,50 @@ seconds, and only re-decoded when the chosen asset changes.
 
 - **Compress (drain)** — the programme is played slightly fast until the gap
   closes, then the delay is live. Nothing is lost.
-- **Rollout (to live)** — an equal-power crossfade from the delayed programme to
-  live over **Rollout xfade** milliseconds, then a jump to live. Faster, and the
-  overlap is audible as a brief double, so keep the window short (250 ms is the
-  default).
+- **Rollout (crossfade to live)** — an equal-power crossfade from the delayed
+  programme to live over **Rollout crossfade** milliseconds, then a jump to live.
+  What was left in the delay is not aired. Faster, and the overlap is audible as
+  a brief double, so keep the window short (250 ms is the default).
+- **Play out (tail airs, live joins)** — ProfanityDelayService's rollout. The
+  delayed programme still in the delay when **Exit** is pressed — the *tail* —
+  plays out on air at normal speed, so nothing is cut. For its last **Live joins
+  for** milliseconds the live programme is summed in at full level, so the
+  presenter talks over the end of it; then the output is live. An exit from full
+  depth takes the depth's own length.
 
-**Bypass** is neither: it drops straight to live with no transition at all.
+  **Rollout return** is an output carrying the tail **alone** while it plays out:
+  no live, and no censor or cough — the raw tail, as ProfanityDelayService's
+  rollout mix-minus output did. Feed it to the presenter's monitor and they hear
+  the end of the delayed programme without hearing themselves come back. It is
+  silent at every other time. It must be an output of its own, not the delay's
+  air or confidence output.
+
+  During a play-out: **Dump** skips that much of the tail (**Dump all** ends it),
+  and the exit carries on. **Build** before live has joined cancels the exit and
+  the delay is back at full depth with no seam; **Build** once live is on air
+  lets the tail finish and then builds from live. Releasing a cough does not
+  cancel it. The **rollout overlap** tally fires when live joins.
+
+**Bypass** is none of these: it drops straight to live with no transition at all.
 
 ### After a dump
 
-**Auto-rebuild** and **After a dump** together decide what happens once a dump
-has fired:
+**After a dump** decides what happens once a dump has fired:
 
 | **After a dump** | Rebuilds after **Dump** | Rebuilds after **Dump all** |
 |---|---|---|
-| **Rebuild** | yes | yes |
-| **Rebuild (dump only)** | yes | no |
-| **Rebuild (dump-all only)** | no | yes |
-| **Stay at depth** | no | no |
+| **Rebuild after any dump** | yes | yes |
+| **Rebuild after a dump only** | yes | no |
+| **Rebuild after a dump-all only** | no | yes |
+| **Don't rebuild (stay at what is left)** | no | no |
 
-Setting **Auto-rebuild** to **No** overrides all four — nothing rebuilds.
+A rebuild expands back to full depth, whatever the build mode (see
+[Build mode](#build-mode)).
+
+!!! note "Auto-rebuild is gone"
+    Earlier versions also had **Auto-rebuild**, which only duplicated this
+    setting. A delay saved with it **No** now loads as **Don't rebuild**, so it
+    behaves exactly as before.
 
 Where a dump does not rebuild, the delay stays at whatever depth is left. That
 can be deliberate (a short programme that is about to end) but it leaves the
@@ -343,13 +383,14 @@ REST, TCP and GPIO.
 | Build rate | **Build rate** | `audio_delays[].build_rate_pct` | `4` | How fast the depth grows, as a percent of real time, 1–10. |
 | Exit rate | **Exit rate** | `audio_delays[].exit_rate_pct` | `4` | How fast it drains on a compress exit, 1–10. |
 | Start state | **On start** | `audio_delays[].start_mode` | `build` | `bypass` (live), `build` (grow to depth), `full` (at depth immediately). |
-| Auto-rebuild | **Auto-rebuild** | `audio_delays[].auto_rebuild` | `true` | Build again after a dump. |
 | Rebuild policy | **After a dump** | `audio_delays[].build_after_dump` | `both` | `both`, `dump`, `dumpall`, `disabled`. |
-| Exit mode | **Exit** | `audio_delays[].exit_mode` | `compress` | `compress` (drain) or `rollout` (crossfade to live). |
-| Rollout window | **Rollout xfade** | `audio_delays[].rollout_overlap_ms` | `250` | Equal-power crossfade length for a rollout exit, 0–10000 ms. |
+| Exit mode | **Exit mode** | `audio_delays[].exit_mode` | `compress` | `compress` (drain), `rollout` (crossfade to live) or `playout` (the tail airs, live joins). |
+| Rollout window | **Rollout crossfade** / **Live joins for** | `audio_delays[].rollout_overlap_ms` | `250` | The crossfade length for a rollout exit; for a play-out, how long live is on air over the end of the tail. 0–10000 ms. |
+| Rollout return | **Rollout return** | `audio_delays[].rollout_return_output` | `""` | A play-out exit's return output: the tail alone, no live, no censor, silent outside the exit. Not the air or confidence output. |
 | Build mode | **Build mode** | `audio_delays[].build_mode` | `expand` | `expand` (stretch the live programme) or `insert` (air a fill while the ring fills). |
 | Fill strategy | **Fill** | `audio_delays[].fill_strategy` | `squeeze` | `squeeze` (stretch the asset to span the build) or `silent`. |
 | Fill asset | **Fill asset** | `audio_delays[].fill_asset` | `""` | An uploaded audio file from the [asset library](../assets/library.md), aired during an insert build. |
+| Insert input | **Insert input** | `audio_delays[].fill_input` | `""` | With **Fill** set to **An input** (`fill_strategy: "input"`): the audio input or processed stage aired, live, during an insert build. Not the delay's own source. |
 | Fill schedule | **Fill schedule** | `audio_delays[].fill_schedule[]` | `[]` | Dayparted fill assets: `{ days, start, end, asset }`. |
 | Join crossfade | **Join xfade** | `audio_delays[].crossfade_ms` | `20` | Crossfade over a dump join. 10–30 ms is the useful range; anything above 100 ms is clamped. |
 | Channels | **Channels** | `audio_delays[].channels` | `2` | `1` or `2`. Set it to match the source: the ring carries whatever the source delivers. |
@@ -382,7 +423,6 @@ A schedule row is `{ "days": "mon,tue", "start": "06:00", "end": "09:00",
       "build_rate_pct": 4.0,
       "exit_rate_pct": 4.0,
       "start_mode": "build",
-      "auto_rebuild": true,
       "build_after_dump": "both",
       "exit_mode": "compress",
       "build_mode": "expand",
@@ -444,8 +484,8 @@ specifically want the silence.
 An expand build grows at *build rate* percent of real time: 10 s of depth at 4 %
 is about four minutes. If you need the depth sooner, raise the rate (to a
 maximum of 10 %, about 100 seconds for 10 s of depth) or switch **Build mode**
-to **Insert (air a fill)**, which reaches depth in exactly the depth's own
-length.
+to **Insert (air a fill)**, which reaches depth from live in exactly the
+depth's own length. A rebuild after a dump or a cough always expands.
 
 **An insert build is silent.**
 Either **Fill** is **Silence**, or the fill asset could not be decoded. Check

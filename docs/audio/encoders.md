@@ -167,23 +167,61 @@ A Stereo Tool processor belongs to a *source stage*, not to the encoder: build t
 
 ## Reading the card
 
-The pill beside each card name is the block's state:
+The pill beside each card name says what the **link** is doing, in the
+transport's own terms. A second pill names the codec.
 
 | Pill | Meaning |
 | --- | --- |
-| **on air · `<codec>`** | Running, source arriving, link up. |
-| **on air · `<codec>` · connecting** | Source is arriving and audio is being coded, but the transport has not connected. Check host, port and credentials. |
+| **SRT · connected** | The far end is connected. The strip shows its address. |
+| **SRT · listening** | A listener waiting for its caller. |
+| **SRT · connecting** / **retrying** | A caller trying to reach its listener; **retrying** carries the last error. |
+| **RTMP · publishing** / **Icecast · streaming** | The server accepted the stream. |
+| **RTMP · refused** / **Icecast · refused** | The server answered and said no. Its words are under the strip — for example `NetStream.Publish.BadName`, which means another encoder already holds that stream key. |
+| **RTP · sending** | Packets are leaving. RTP has no far end to connect to, so this is all this end can know. |
+| **SIP · in call** | A call is up. |
+| **HLS · uploading** | Segments are landing at the destination (disk, FTP, SFTP or S3). |
+| **HLS · upload failing** | The destination is refusing writes; its reason is under the strip. Segments are still cut and served by this box. |
+| **HLS · waiting for the first segment** / **serving** | Nothing has landed yet / no destination is set: the box serves the stream itself. |
 | **no source** | Running, but nothing is coming from the chosen source. |
 | **stopped** | Not running — disabled, or it refused to start. |
 | **held · standby** | Not running because this box is a locked backup. Hover for the reason. |
-| **refused** | The destination answered and said no. Hover for its words — for example an RTMP server's `NetStream.Publish.BadName`, which means another encoder already holds that stream key. |
 | **unlicensed** | Running without a licence seat, so the output carries the unlicensed tone: a one-second burst every thirty seconds, mixed in before the codec so every transport carries it. |
+
+Green is working, red is refused or failing, amber is retrying, grey is waiting.
+
+### The statistics strip
+
+Under the header, a running encoder shows its link's evidence:
+
+* **to** — who it is talking to: the SRT peer, the server, the HLS destination.
+  An RTMP stream key is never shown.
+* **for** — how long the link has been in its state.
+* **rate** — what it is actually sending, measured over the last two seconds.
+* The transport's own counters:
+
+| Transport | Counters |
+| --- | --- |
+| SRT | sent, packets, lost, retransmitted, dropped, buffered, RTT (when the library reports it), reconnects |
+| RTMP | sent, frames, queued, dropped, reconnects |
+| Icecast | sent, frames, dropped, reconnects |
+| RTP | packets, sent, send errors |
+| SIP | packets, sent, calls |
+| HLS | segments made, uploaded, failed, data uploaded, last upload (how long ago) and how long it took |
+
+**Lost** and **retransmitted** climbing on SRT mean the path is dropping
+packets; raise the latency. **Queued** and **dropped** on RTMP mean the server
+is not taking frames as fast as they are made. On HLS, **uploaded** falling
+behind **segments made**, or **last upload** growing past a couple of segment
+lengths, means the destination is slow or failing before it says so.
 
 On a SIP encoder the **call card** under the settings shows the call's own state — see [the call card](rtp-sip.md#the-call-card).
 
 The meter beside the pill is the **program level into the encoder**. An encoder has no output level to show — its output is a coded stream — so this is the one meter on the card.
 
-The status API carries more than the card does. `GET /api/audio-encoders` returns one row per block with `source`, `target`, `transport`, `codec`, `channels`, `rate`, `frames`, `bytes`, `connected`, `error` (the destination's reason when it is refusing), `held`, `watermarked`, the meter, the block's recent log lines, an `rtp` object for an RTP or SIP encoder, a `sip` object for a SIP encoder, and an `srt` object with the link's own view: `connected`, `peer`, packets sent, lost, retransmitted and dropped, `reconnects` and `last_error`.
+The status API carries the same. Each row of `GET /api/audio-encoders` has a
+`link` object in one shape for every transport — `transport`, `state` (the
+pill's word), `up`, `detail` (who), `for_s`, `kbps`, `counters` (the strip's
+numbers, named as above in snake case) and `error` — beside the older fields: `source`, `target`, `transport`, `codec`, `channels`, `rate`, `frames`, `bytes` (on HLS, bytes that landed), `connected`, `error` (the destination's reason when it is refusing), `held`, `watermarked`, the meter, the block's recent log lines, an `rtp` object for an RTP or SIP encoder, a `sip` object for a SIP encoder, and an `srt` object with the link's own view: `connected`, `peer`, packets sent, lost, retransmitted and dropped, `reconnects` and `last_error`.
 
 !!! note "`connected` is the destination's word"
     On an SRT encoder, `connected` is the link's state, not the queue's: a listener that could never bind its port, or a caller nobody answers, reads `false` with the reason in `srt.last_error`. On an HLS encoder it is the origin's state, so a dead FTP or S3 target reads `false` even while segments are being cut and served locally. On RTMP and Icecast it is the server's: a refused publish reads `false` with the server's reason in `error`. On RTP there is no far end to be connected to, so it means the socket is taking the packets; on SIP it means a call is up.
