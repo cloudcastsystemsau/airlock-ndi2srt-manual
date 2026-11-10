@@ -166,6 +166,11 @@ pcm.aes67_in_1 {
 }
 ```
 
+A device added while ndi2srt is running — a send or receive added in the
+CloudCast AES67 driver's panel, which names it at once — appears the next
+time the list is opened and can be used straight away; ndi2srt does not
+need restarting.
+
 The JACK, PipeWire and PulseAudio bridges are listed without being opened —
 opening JACK can start a server — so their channel count shows only once an
 input uses them. The templates ALSA generates for every card (`front:CARD=…`,
