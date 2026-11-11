@@ -227,6 +227,30 @@ and six held `.mjpg` streams will use all of them.
 An unknown tap is
 `404 {"error":"no preview \"x\" — delay|delay-pre|encoder|decoder"}`.
 
+### Cue — `GET /api/cue`
+
+The audio behind any meter, as Opus, for the console's headphone buttons
+([Cueing what a meter reads](../audio/io.md#cueing-what-a-meter-reads)). Viewer,
+and allowed on a backup: it only listens.
+
+| Parameter | Meaning |
+|---|---|
+| `tap` | `<kind>:<name>` — `input`, `output`, `stage-in`, `stage`, `delay-in`, `delay`, `encoder`, `decoder` (by block name or stage id; a delay track is `delay:<delay>:<track>`), or `vdelay-in` / `vdelay` with a video channel number |
+| `pair` | which stereo pair, from 0 (channels 1/2); past the end plays the first |
+
+The response never ends on its own. It is a run of messages, each
+`[kind: 1 byte][length: 2 bytes, big-endian][payload]`:
+
+| Kind | Payload |
+|---|---|
+| `1` | hello, JSON: `{"tap", "pair", "rate": 48000, "channels": 2, "frame_ms": 20, "bitrate": 96000, "codec": "opus"}` |
+| `2` | one Opus packet: 48 kHz stereo, 20 ms |
+| `3` | status, JSON: `{"source_channels", "source_rate"}` when audio starts or its format changes; `{"idle": true}` each second nothing arrives |
+
+Refusals: `400` for a malformed `tap` or an unknown kind, `404` for a point the
+configuration does not have, `429` when eight cues are already playing, `503`
+when the server has no libopus.
+
 ---
 
 ## Delay transport and on-air — operator

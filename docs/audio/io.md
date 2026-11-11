@@ -133,6 +133,45 @@ Meters are peak, per channel, reset each time the page polls. They read the
 device directly on an input, and the **mixed** buffer on an output — what the
 card is actually playing, all voices summed.
 
+## Cueing what a meter reads
+
+Every audio meter in the console has a headphone button beside it. Click it to
+hear, in this browser, exactly what that meter reads:
+
+* an input or an output on this page;
+* a processing stage's **in** or **out**;
+* an audio delay's **in** or **out** (as aired), and each of its tracks;
+* an audio encoder's programme in, or an audio decoder's decoded audio;
+* a video delay's **LIVE IN** or **ON AIR** audio.
+
+One cue plays at a time across the whole console. Cueing another meter replaces
+it. The button that is playing is lit, and clicking it again stops it.
+
+While a cue plays, a bar sits at the foot of every page. It shows:
+
+* what you are hearing;
+* which decoder the browser is using;
+* the buffer (about a quarter of a second), the underruns and the bit rate;
+* a volume slider, which this browser remembers;
+* **Stop**.
+
+The cue keeps playing as you move between pages. A source with more than two
+channels starts on channels 1/2, and the bar offers the other pairs.
+**no audio arriving** means the point exists but nothing is flowing through it:
+the block is stopped, or has no source.
+
+The server sends Opus at 96 kb/s in 20 ms frames (`GET /api/cue`, see the REST
+reference). The browser decodes it with **WebCodecs** where it can. Otherwise it
+uses **opus.js**, which Airlock serves itself, so no internet access is needed.
+Browsers offer WebCodecs only over HTTPS or on `localhost`, so a console opened
+over plain HTTP (the usual case) uses opus.js. The bar shows which one is in use,
+and the two sound the same.
+
+Any signed-in role can cue, viewers included, and cueing works on a backup,
+because it only listens. Up to eight cues can play at once across all browsers;
+a ninth is refused until one stops. While nobody is cueing, the server does no
+cue work at all.
+
 ## Platform backends
 
 | Platform | Backend | Device names | Notes |

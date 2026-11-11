@@ -74,7 +74,9 @@ current depth in seconds, with a depth gauge underneath.
 4. Press **Save**.
 
 The delay starts straight away. Its card shows the state pill, the **in** and
-**out** meters, and the transport buttons.
+**out** meters, and the transport buttons. The headphone button beside each
+meter lets you listen to it in the browser: **out** is exactly what goes to air
+(see [Cueing what a meter reads](io.md#cueing-what-a-meter-reads)).
 
 !!! tip "Set the dump size before you go on air"
     **SAFE** on the card means the ring holds at least one whole dump. An
