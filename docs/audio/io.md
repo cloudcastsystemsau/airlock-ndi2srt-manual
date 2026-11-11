@@ -11,7 +11,8 @@ Each device is opened once and shared.
 ## Why a registry
 
 A sound card is not a file you can open twice. An ALSA `hw` device is exclusive.
-An ASIO driver is single-client. Even where a driver tolerates two opens, two
+An ASIO driver is opened once per program and shared by everything on it — its
+inputs and its outputs alike. Even where a driver tolerates two opens, two
 capture clocks on one card are two sources of drift, and your delay depth pays
 for it.
 
@@ -57,7 +58,8 @@ output without fighting for the card.
       for a pair, **Channel** for mono, **Ch 1**, **Ch 2** … beyond that),
       each listing the device's real channels. Pick which device channel
       each one is. On macOS the list shows the driver's own channel names
-      (`3 · Mic 3`); ALSA and an unopened ASIO driver show numbers.
+      (`3 · Mic 3`), and so does an ASIO driver (`47 · Livewire 24 Left`);
+      ALSA shows numbers.
 4. Press **Save**.
 
 The input opens immediately. The state pill at the end of the row turns to
@@ -138,7 +140,7 @@ card is actually playing, all voices summed.
 | Linux | ALSA | `hw:<card>,<device>` or `default` | `libasound.so.2` is loaded at run time, so no ALSA development packages are needed and a box without ALSA still starts (the input simply reports an error). The device list comes from the kernel's PCM table plus `default`. |
 | macOS | CoreAudio | the device's own name | The process needs **Microphone** permission to capture. |
 | Windows | WASAPI | the device's own name | The default input and output work with no configuration. |
-| Windows | ASIO | `asio:<driver name>` | Airlock drives the driver's own interface directly — no vendor SDK is installed or shipped. **Capture only.** |
+| Windows | ASIO | `asio:<driver name>` | Airlock drives the driver's own interface directly — no vendor SDK is installed or shipped. Inputs **and outputs**. |
 
 Every backend delivers 16-bit interleaved audio. Float, 24-bit and 32-bit device
 formats are converted for you.
@@ -204,10 +206,18 @@ ASIO is for the broadcast cards: name the device `asio:` followed by the driver
 name exactly as it is registered — for example `asio:CloudCast AES67`. Two
 constraints matter on air:
 
-- **One ASIO driver per process.** A second ASIO input is refused with a clear
-  message. This matches the drivers themselves, which are single-client.
-- **ASIO output is not supported.** Play a delay out through a WASAPI device, an
-  NDI audio send or an audio encoder instead.
+- **Every channel, named, as soon as you pick the driver.** Choosing an ASIO
+  driver lists all of its inputs and outputs with the driver's own names — the
+  Axia driver's 48 in and 48 out, as `Livewire 1 Left` … `Livewire 24 Right` —
+  before anything has opened it. Airlock asks the driver briefly in the
+  background, without disturbing another program that has it open.
+- **One driver, shared.** Inputs and outputs on the same ASIO driver share one
+  open of it: add an input on Livewire 3 and an output on Livewire 24 and both
+  run from the one driver. Only the output channels an output actually plays to
+  are claimed — on the Axia driver each ASIO output is a Livewire source, and the
+  others are left alone. Adding an output while the driver runs re-starts its
+  buffers once, without dropping the inputs. Two different ASIO drivers at once
+  in one Airlock is refused with a clear message.
 
 ### NDI audio
 
@@ -253,7 +263,7 @@ encoder's input, a track's input. So the rule for a redundant pair is simple:
 | Setting | Console label | Config key | Default | Meaning |
 |---|---|---|---|---|
 | Name | **Name** | `audio_outputs[].name` | — | The name blocks play to. |
-| Device | **Device** | `audio_outputs[].device` | `""` | The playback device, named as above. Empty = the box's default output. ASIO is not available here. |
+| Device | **Device** | `audio_outputs[].device` | `""` | The playback device, named as above (`asio:<driver>` for ASIO). Empty = the box's default output. |
 | Channels | **Channels** | `audio_outputs[].channels` | `0` | How many channels the output carries. `0` = all the device has. |
 | Device channels | **Device channels out** | `audio_outputs[].channel_map` | `[]` | Which device channel each of the output's channels plays to, from **0**. The device is opened as wide as the highest one; the rest play silence. |
 | Sample rate | **Sample rate** | `audio_outputs[].rate` | `0` | The rate the device is opened at. `0` = the usual: 48 kHz on Linux, the device's own rate elsewhere. `192000` is for a Stereo Tool MPX composite, and the device must run at it natively — the composite is never resampled. |

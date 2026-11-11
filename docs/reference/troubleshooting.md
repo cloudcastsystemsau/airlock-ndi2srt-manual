@@ -352,7 +352,7 @@ HEVC fill clips go through a different decoder and have no such limit.
 | | The card insists on a channel count | Set `audio_inputs[].channels` rather than leaving it at `0` |
 | | The device name or ALSA identifier is wrong | `GET /api/audio-devices` lists what the box has; `GET /api/audio-inputs` shows what opened |
 | The device is busy | Something else has it, or two entries name the same device twice | Each device is opened **once** and shared by everything that names the input — use one named input and point several consumers at it |
-| There is no ASIO output | ASIO output is not built | Playback is ALSA, CoreAudio or WASAPI |
+| An ASIO output plays nothing | Another ASIO driver is open in this Airlock, or the driver refused to start | Server › Audio shows the output's error; one ASIO driver per Airlock, shared by its inputs and outputs |
 | An audio delay drifts against the device clock | Device and source clocks differ | Depth drift is held with pitch-preserving stretch (SoundTouch, built in) |
 | The encoder carries the wrong audio pair | `audio.pair` selects which pair AAC carries | `1` = channels 1–2, `2` = 3–4. A source without the pair asked for falls back to the first pair and says so in the log |
 | A third-party SRT receiver connects to an audio encoder and decodes nothing | That link carries Airlock's own framing, not MPEG-TS | Use RTP or a SIP call for someone else's equipment, Icecast, RTMP or HLS for distribution, or a video channel's encoder for a transport-stream SRT feed |

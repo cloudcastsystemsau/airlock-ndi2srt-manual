@@ -890,7 +890,7 @@ This box's audio playback devices, as named outputs. Same shape and same rules a
 | `audio_outputs[].channels` **(local)** | integer | `0` | Channels to open. `0` = all the device has |
 | `audio_outputs[].rate` **(local)** | integer | `0` | Sample rate to open the device at. `0` = the usual (48 kHz on Linux, the device's own elsewhere); `192000` for a Stereo Tool MPX composite |
 
-ASIO output is not built yet; playback is ALSA, CoreAudio or WASAPI.
+Playback is ALSA, CoreAudio, WASAPI or ASIO (`asio:<driver>`; with a `channel_map`, only the mapped ASIO outputs are claimed).
 
 ---
 
