@@ -205,6 +205,7 @@ read:
 | Primary version | the same version this box runs |
 | Automatic takeover | `after 30 s unreachable` |
 | Assets | `n of n in sync` |
+| Stereo Tool settings | `n of n in sync` (two files per Stereo Tool) |
 | Last error | `none` |
 
 The card's heading shows the state — you want **backup · in sync**.
@@ -237,6 +238,11 @@ cannot be mirrored also raises `ALARM_REDUNDANCY_ASSETS` and marks the backup
     A path that exists on both boxes is left alone and nothing is fetched. A
     path that only exists on the primary is fetched into the backup's own assets
     directory and the mirrored document is rewritten to point there.
+
+The **Stereo Tool settings** row works the same way for what each Stereo Tool has
+saved (everything changed in its own web interface). Those files always land in
+the backup's own `stereotool` folder, and the backup's running Stereo Tool loads
+each one as it arrives.
 
 ## Step 7 — read the Backups table on the primary
 

@@ -144,6 +144,30 @@ A preset that fails to load is logged as `FAILED` and the stage keeps running on
 whatever the processor had. Check the path, and check that the file is readable
 by the account the service runs as.
 
+### Settings kept across restarts
+
+Whatever you change in Stereo Tool's own web interface is kept. Each Stereo Tool
+(a processing stage, or an encoder's own) saves its settings every two seconds
+when they change, and loads them again when Airlock starts. The files are
+`stereotool/stage-<id>.sts` and `stereotool/encoder-<name>.sts` in the folder
+that holds the configuration.
+
+* **Choosing a different preset still wins.** When the **Preset** field changes,
+  the new preset loads and becomes the starting point; changes made after that
+  are kept again.
+* **Airlock's own settings always apply on top**: bypass, the web interface's
+  port and whitelist, the FM path and RDS on or off. The saved file never
+  overrides them, and it never holds the licence.
+* The card shows what the processor started from and when its settings were
+  last saved, for example `Settings kept across restarts · started from its
+  saved settings · last saved 14:02:11`.
+
+**Reload preset** on the card drops everything changed in Stereo Tool since and
+goes back to the configured preset, or to Stereo Tool's defaults when no preset
+is set. It asks first, because it changes the sound on air, and it is written to
+the audit log. Over REST it is `POST /api/stereotool/{name}/reload-preset`, where
+the name is a stage's id or name, or an encoder's name.
+
 ### Bypass
 
 **Mode** has two settings:
@@ -381,6 +405,11 @@ The stage list is **plant policy**: `audio_stages` is copied from a primary to
 its backups, licence key, preset path and all. The *inputs* those stages name
 are machine-local, so each box resolves `From` against its own hardware — which
 is why input names must match across a redundant pair.
+
+The primary's saved Stereo Tool settings are mirrored too. A backup loads them
+into its running processor within a few seconds of a change on the primary, so
+a takeover sounds the same. While it is a locked backup it never writes over
+them; after a takeover it saves its own changes again.
 
 ## Troubleshooting
 
