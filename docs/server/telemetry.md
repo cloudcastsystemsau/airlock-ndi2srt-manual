@@ -19,7 +19,11 @@ since the previous afternoon. No single box can see that on its own.
 
 ## What is sent
 
-One JSON document per sample:
+One sample per interval, encoded as **CBOR** and compressed with **zstd**
+(telemetry v2, from 0.15.62; the wire format is `docs/telemetry-v2.md` in the
+source). A typical site with audio is about **3–4 kB a minute** on the wire; the
+JSON samples before it were 18 kB without any audio. The **Last post** card shows
+both figures: on the wire, and before compression.
 
 | Part | Carries |
 |---|---|
@@ -28,6 +32,13 @@ One JSON document per sample:
 | `chains` | Each channel's configuration as far as it describes the chain: NDI source, codec and encoder, bitrates, GOP, PCR interval, the delay's depth and NDI name, the decoder's hardware mode and output delay, and each SRT endpoint's mode, address, latency and stream id. |
 | `alarms` | The active alarm list, when `include_alarms` is on. |
 | `state` | **The same document the console renders**, with the narrative stripped. |
+| `audio` | Every audio block, as the console's audio pages report it: inputs and outputs, processing stages (Stereo Tool's licence, latency and saved settings), audio delays (state, depth, dumps, censor), audio encoders and decoders (their link). |
+| `meters` | Light audio metering: one peak and one RMS per second per side at every point that has a meter in the console — two bytes per side per second. Off with `meters`. |
+| `thumbs` | Small pictures (256×144 JPEG, about 3–8 kB) of each channel's on-air picture — the delay's output, else the encoder's source, and a decoder's output. Every `thumbs_s` when the picture has changed, and at once when a black or frozen alarm raises. Off with `thumbs_s` = 0. |
+
+`machine` and `chains` change almost never, so they are sent when they change,
+on the first sample after a start or a failed post, and at least once an hour;
+every sample carries their hashes so the collector knows which it has.
 
 The last one is the point. The sample is built by the same builder that feeds the
 console, so a figure plotted in the cloud is by construction the figure on the
@@ -38,8 +49,8 @@ releases and then nobody trusts either.
 feed are removed — forty lines a block, most of the size and none of the meaning
 once it is a time series. What is left is counters and rates.
 
-A three-channel box is about 12 kB per sample. A sample larger than 512 kB is
-refused locally and logged rather than sent.
+A sample larger than 512 kB after compression is refused locally and logged
+rather than sent.
 
 ### What is deliberately not sent
 
@@ -48,7 +59,8 @@ refused locally and logged rather than sent.
   OIDC client secret are not in the sample at all.
 * **No raw hardware string.** The hardware id is a digest. It identifies the
   machine for support without handing a collector the input to someone's licence.
-* **No video or audio.** Counters and configuration only.
+* **No video or audio.** Counters, configuration, levels (one number per second)
+  and small still pictures only — nothing that could be played back.
 * **No log text.**
 
 ### It is not a control channel
@@ -67,10 +79,13 @@ impersonated collector can learn what a site is doing; it cannot touch the plant
 | Interval | Interval (s) | `telemetry.interval_s` | `60` | Seconds between samples. 10 to 3600. |
 | Site name | Site | `telemetry.site` | `""` | What this instance is called in the collector. Empty = the machine name. |
 | Include alarms | Include alarms | `telemetry.include_alarms` | `true` | Send the active alarms with each sample. |
+| Audio levels | Meters | `telemetry.meters` | `true` | One peak and one RMS per second at every metered point. |
+| Pictures | Thumbs (s) | `telemetry.thumbs_s` | `300` | Seconds between pictures of each channel's on-air picture, sent only when it changed. `0` = no pictures. 30 to 86400. |
 
 ```json
 "telemetry": { "enabled": false, "url": "", "api_key": "",
-               "interval_s": 60.0, "site": "", "include_alarms": true }
+               "interval_s": 60.0, "site": "", "include_alarms": true,
+               "meters": true, "thumbs_s": 300.0 }
 ```
 
 A save is refused unless, with `enabled` on:
@@ -98,6 +113,25 @@ A save is refused unless, with `enabled` on:
 Changes apply live. The agent re-reads the configuration every tick, so turning
 telemetry on, changing the collector or changing the interval takes effect
 without a restart.
+
+## The collector
+
+Cloudcast's collector is at **https://telemetry.ccsystems.io**; ask for a site key.
+Its front page is the fleet: one card per site with its on-air pictures, an audio
+word (**ok**, **silent** or **clipping**, from the last minute of meters) and its
+alarms. A site's own page (`/i/<site>`) has, over the chosen window:
+
+* **Pictures** — the newest of each channel, with its age; click for it large,
+  and step back through its history;
+* **Audio** — one strip per meter: peak as bars, RMS as a line, silence (10 s or
+  more at −80 dBFS or below) as a red band and clipping (−0.5 dBFS) as red ticks;
+* **Blocks** — every video delay and audio block as the newest sample reported
+  it: delay state and depth, Stereo Tool loaded / licensed / latency, encoder and
+  decoder links;
+* **Series** — the counters over time.
+
+Pictures are kept a week at full rate, then one an hour; everything is kept 90
+days.
 
 ## Last post
 
