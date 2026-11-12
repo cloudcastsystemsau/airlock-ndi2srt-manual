@@ -248,8 +248,8 @@ Receiver and sender **state** reads:
 
 ## Troubleshooting
 
-**The receiver says `error — bind … failed`.**
-Something else holds the port, or the address in **Listen on** is not on this machine. Airlock never falls back to the wildcard silently, so a bind failure stays visible until you fix it.
+**The receiver says `error — cannot bind …`.**
+Something else holds the port, or the address in **Listen on** is not on this machine. When the port is in use, the message names the process holding it (its pid and executable). Airlock never falls back to the wildcard silently, so a bind failure stays visible until you fix it.
 
 **I added a receiver and nothing is listening.**
 The hub is reconciled by a restart. Restart the server.

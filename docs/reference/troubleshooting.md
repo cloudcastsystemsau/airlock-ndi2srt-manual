@@ -31,9 +31,11 @@ Symptoms, their causes, and what to do. Find the area, find the row.
 | Symptom | Cause | Fix |
 |---|---|---|
 | The encoder never connects | Both ends are callers, or both are listeners | Exactly one end of a link is a `listener` |
-| | The listener port is blocked, or already in use | Open the port; listener ports must be unique across channels (enforced at save) |
+| | The listener port is blocked | Open the port |
+| | The listener port is held by another process: the card says **Cannot bind UDP 0.0.0.0:… — held by …**, `srt.link` is `cannot_bind`, and `ALARM_SRT_BIND` names the process | Stop the process named, or move the block to a free port. Listener ports must be unique across channels (enforced at save) |
 | | The passphrase or key length differs between the ends | Match `passphrase` and `key_len` |
-| An audio encoder or decoder shows `connected: false` | A listener that could not bind, or a caller nobody answers | The reason is in the row's SRT `last_error` |
+| An audio encoder or decoder shows `connected: false` | A listener that could not bind (its link reads **cannot bind**), or a caller nobody answers | The reason is in the row's SRT `last_error`; a bind failure names the process holding the port |
+| A decoder shows a peer but receives nothing | Historic: the peer of a session that had ended stayed on the card | Fixed. `srt.peer` is cleared when a session ends, and `srt.link` reads `peer_lost` until a peer is back |
 | "More drops than packets sent" on a long link; retransmission seems not to work | Historic: the send buffer was fixed at about 46 ms of data, so on any link with a longer round trip the sender had already evicted what the receiver asked for | Fixed. Both buffers are now sized from the configured latency and bit rate, floored at 1 MiB and capped at 64 MiB. Upgrade |
 | Heavy loss on a Wi-Fi or cellular uplink that raising `latency_ms` does not fix | Under burst loss the sender does not retransmit everything the receiver asks for, and its "dropped" figure counts NAK reports rather than packets | Treat Wi-Fi and cellular uplinks as unproven. On a wired link with sparse loss recovery works normally |
 | Loss figures look suspiciously good | On a near-idle CBR stream most of the transport is null padding, so lost packets are nearly all padding | Judge loss on real content at the same rate |
@@ -211,7 +213,8 @@ HEVC fill clips go through a different decoder and have no such limit.
 | `/api/delay/dump` with no `seconds` dumped everything | That is Dump all | Pass `?seconds=` for a partial dump |
 | TCP errors | `ERR <ch> <CODE> <reason>`, lines ending CR LF | Codes: `BADVERB`, `BADCH`, `NOCHAN`, `INVALID_STATE`, `LOCKED`, `LICENSE` / `UNLICENSED`, `AUTH` |
 | A TCP peer is refused at connect | `tcp.allow_list` does not include it | Loopback is always allowed; add the peer, or clear the list |
-| The service starts, then stops with exit status **3** | The web port (`web.port`) is held by something else — another instance or another program. The log's last line is `web: bind …: Address already in use — exiting` | A port still being let go of (the previous instance stopping) is waited for, for 15 s. Past that the instance exits rather than run with no console and no API, so the service manager restarts it. Find the holder (`ss -ltnp`, `netstat -ano`) or change `web.port` |
+| The service starts, then stops with exit status **3** | The web port (`web.port`) is held by something else — another instance or another program. The log's last line is `web: cannot bind TCP …: the port is held by <program> (pid …, <path>) — exiting` | A port still being let go of (the previous instance stopping) is waited for, for 15 s. Past that the instance exits rather than run with no console and no API, so the service manager restarts it. Stop the process the log names, or change `web.port`. The MSI ends every running `ndi2srt.exe` before it installs, so an upgrade cannot leave one behind |
+| The browser shows an older console after an upgrade | An older `ndi2srt.exe` kept running and still holds the web port | As above: the log names it. Installing 0.15.63 or later from the MSI ends it |
 | A TCP session is refused before any command | `auth.tcp_token` is set | Open with `AUTH <token>`. A wrong token answers `ERR 0 AUTH bad token` and the socket closes |
 | `SUBSCRIBE` seems to ignore an earlier line | It **accumulates** across lines rather than replacing | Expected. It answers with its snapshot after the `OK` |
 

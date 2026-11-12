@@ -189,7 +189,7 @@ A read is **never refused**. It answers on a locked backup and on a channel some
 | `air.depth_frames(ch)` | frames, `-1` for no such channel | The same, in frames. |
 | `air.target_depth(ch)` | seconds, `-1` for no such channel | What it is building towards. |
 | `air.block_state(ch, block)` | `running` \| `stopped` \| `disabled`; `""` for no such channel | One block's state, the same word every other surface reports. |
-| `air.running(ch, block)` | bool | Is that block running. |
+| `air.running(ch, block)` | bool | Is that block running. An encoder or decoder whose SRT listener cannot bind its port is not running. |
 | `air.encoder_state(ch)` | as `block_state` | Shorthand for `air.block_state(ch, "encoder")`. |
 | `air.decoder_state(ch)` | as `block_state` | Shorthand for `air.block_state(ch, "decoder")`. |
 | `air.encoder_running(ch)` | bool | Shorthand for `air.running(ch, "encoder")`. |

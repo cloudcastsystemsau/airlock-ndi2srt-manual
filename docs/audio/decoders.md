@@ -89,7 +89,7 @@ A handful of gaps after a reconnect is normal. A gap count that climbs steadily 
 
 `GET /api/audio-decoders` returns one row per block, each with a `link` object
 in the same shape as an encoder's (`transport`, `state`, `up`, `detail`,
-`for_s`, `kbps`, `counters`, `error`), and: `name`, `source`, `target`, `transport`, `running`, `connected`, `codec`, `channels`, `rate`, `frames`, `gaps`, `concealed`, `watermarked`, the meter, an `rtp` object on RTP and SIP, a `sip` object on SIP, the block's recent log lines, and an `srt` object with the link's own view — `connected`, `peer`, `recv_mbps`, packets received, lost, dropped and retransmitted, `reconnects` and `last_error`.
+`for_s`, `kbps`, `counters`, `error`), and: `name`, `source`, `target`, `transport`, `running`, `connected`, `codec`, `channels`, `rate`, `frames`, `gaps`, `concealed`, `watermarked`, the meter, an `rtp` object on RTP and SIP, a `sip` object on SIP, the block's recent log lines, and an `srt` object with the link's own view — `connected`, `peer`, `recv_mbps`, packets received, lost, dropped and retransmitted, `reconnects`, `last_error`, `link` (`listening`, `calling`, `connected`, `peer_lost` or `cannot_bind`) and `bind_failure` (while `cannot_bind`: `address`, `reason` and the `holder`'s `pid`, `exe` and `this_process`).
 
 `connected` on the row is the link's state, not the decoder's optimism: a listener that could not bind its port, or a caller nobody answers, reads `false` with the reason in `srt.last_error`.
 
@@ -125,7 +125,8 @@ Alarm detectors watch delay channels and their video encoders and decoders. Stan
 | Symptom | Likely cause |
 | --- | --- |
 | **no stream**, encoder says **connecting** | Neither end is listening, or both are. One must be a listener and the other a caller. |
-| **no stream**, and `srt.last_error` names the port | The listener could not bind — another process holds the port, or the bind address is not on this box. |
+| **SRT · cannot bind** | The listener could not bind its port. `srt.last_error` names the address and the process holding it (pid and executable); stop that process or choose another port. |
+| **SRT · peer lost** | A peer was connected and has gone; the listener is waiting for it to come back. |
 | Link connects, but still **no stream** | The far end is not an Airlock audio encoder. A third-party SRT sender will connect happily and send a payload this decoder cannot read. |
 | Link connects and drops repeatedly | A passphrase set on one end only, or a mismatched passphrase. Both ends must agree. |
 | Gap count climbing | Loss beyond the link's recovery. On SRT raise the latency on both ends; on RTP raise the jitter buffer; or fix the path. |
