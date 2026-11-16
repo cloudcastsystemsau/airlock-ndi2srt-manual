@@ -337,6 +337,9 @@ receive, with the processor's latency. It is not the FM composite (see
 
 - The card shows **Playing to *output*** once audio is flowing, or **Not playing
   to *output*** with the reason, for example `no audio output called "TX 1"`.
+
+![A Stereo Tool stage playing its processed audio to an output](../img/audio/sources-play-to.png){ .shot }
+
 - Changing or clearing **Play to** takes effect on the running stage. Stereo Tool
   is not reloaded and the stage's encoders do not gap.
 - A missing output never stops the stage: its encoders and delays carry on.

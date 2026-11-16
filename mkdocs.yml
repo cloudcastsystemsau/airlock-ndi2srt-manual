@@ -88,6 +88,7 @@ nav:
       - Timecode and clocking: video/timecode.md
   - Audio:
       - Inputs and outputs: audio/io.md
+      - Mixer: audio/mixer.md
       - Sources and Stereo Tool: audio/sources.md
       - Audio delay: audio/delay.md
       - Audio encoders: audio/encoders.md

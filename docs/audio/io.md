@@ -130,7 +130,10 @@ on air:
 
 When you do want several sources summed (a shared monitor, a talkback mix), tick
 **Allow mixing** on the output's row. Its pickers then say *(mixing)* and any
-number of blocks may play to it.
+number of blocks may play to it, and each gets a fader and an on/off on the
+[Mixer](mixer.md).
+
+![An output with Allow mixing on, fed by two blocks](../img/audio/io-mixing.png){ .shot }
 
 Mixing is part of the routing, so a backup follows its primary's choice even
 though the devices behind the names are each box's own. A disabled block does
@@ -139,21 +142,7 @@ not hold an output.
 ### Faders and switches
 
 Every source on an output with **Allow mixing** on has a fader and an on/off
-switch. **Audio › Mixer** shows them as a strip per source: an **ON/OFF**
-button, a fader (double-click it for 0 dB), the level in dB (type a number and
-press Enter), and a meter after the fader.
-
-- A fader runs from −80 dB (off the bottom) to +12 dB; 0 dB is unity.
-- A move or a switch **ramps over 20 ms**, so neither clicks on air.
-- Positions are **saved** within half a second and come back after a restart.
-  They are synced to a backup with the rest of the routing.
-- The same faders and switches answer to REST (`/api/audio-mix`), the TCP `MIX`
-  command, scripts (`air.mix_on`, `air.mix_gain`, …, and the `mixEvent`
-  trigger) and Axia GPIO (`mix:<output>/<source>` targets and lamps). The page
-  follows a change made from any of them.
-- A locked backup refuses them, like every other control.
-- An output that plays one source has no faders: its single source passes
-  untouched, bit for bit.
+switch, on **Audio › Mixer**. See [Mixer](mixer.md).
 
 !!! note "Upgrading"
     A configuration from before 0.15.64 that already sends several blocks to
