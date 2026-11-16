@@ -177,9 +177,21 @@ instead of a single channel. Each entry is `kind:id`:
 | `stage:fm` | an audio stage or audio delay |
 | `encoder:2` · `decoder:2` | a video encoder or decoder |
 | `aenc:web` · `adec:studio` | an audio encoder or decoder |
+| `mix:Monitors/Studio` | one source on a mixing output (NDS-173) |
 
 The action runs on every target it is valid for. A fan-out overrides `channel`
 and `stage`.
+
+A **mix source** takes three actions: `enable` switches it on, `disable` off,
+and `toggle` flips it on each press (edge `LOW`; `toggle` with edge `BOTH` is
+refused, as it would flip twice per press). `enable` with edge `BOTH` is "on
+while held" — a talkback key. The source is named as the console shows it, or
+by its full label; the output must have **Allow mixing** on.
+
+```json
+{ "enabled": true, "port": 3, "pin": 0, "edge": "BOTH", "action": "enable",
+  "targets": ["mix:Monitors/Talkback"] }
+```
 
 ```json
 { "enabled": true, "port": 2, "pin": 0, "edge": "LOW", "action": "dump",
@@ -303,6 +315,10 @@ freely: many readers of one input are harmless.
 Set **Shows** to *Many blocks (aggregate)*: the lamp is evaluated against every
 entry in `sources` (the same `kind:id` form as a control fan-out) and combined by
 `aggregate` — `any` lights if any source is lit, `all` only if every one is.
+
+A mix source (`mix:<output>/<source>`) lights for the lamps `on` (switched
+on), `off` (switched off) and `live` (on and playing to the output now) — the
+tally for a source's on button.
 
 ## Relays through a delay
 

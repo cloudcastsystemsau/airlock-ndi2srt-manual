@@ -903,6 +903,19 @@ enabled blocks to it is refused, naming both. **Synced** (routing policy), unlik
 |---|---|---|---|
 | `audio_mix_outputs` | array of strings | `[]` | Output names allowed to mix. On upgrade, an output the file already shares is added, and the log says so |
 
+## audio_mix_sources
+
+NDS-173. The fader and switch of each source on a mixing output. **Synced**.
+A source with no entry plays at 0 dB, on. Written by the console's Mixer, REST,
+TCP `MIX`, scripts and GPIO, within half a second of a move.
+
+| Key | Type | Default | Meaning |
+|---|---|---|---|
+| `audio_mix_sources[].output` | string | `""` | The mixing output |
+| `audio_mix_sources[].source` | string | `""` | The source's full label, e.g. `audio decoder "Studio"`, `stage "st"`, `audio delay "Main" monitor` |
+| `audio_mix_sources[].gain_db` | number | `0` | The fader, `-80` to `+12` dB |
+| `audio_mix_sources[].on` | bool | `true` | The switch |
+
 ---
 
 ## audio_stages

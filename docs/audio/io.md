@@ -136,6 +136,25 @@ Mixing is part of the routing, so a backup follows its primary's choice even
 though the devices behind the names are each box's own. A disabled block does
 not hold an output.
 
+### Faders and switches
+
+Every source on an output with **Allow mixing** on has a fader and an on/off
+switch. **Audio › Mixer** shows them as a strip per source: an **ON/OFF**
+button, a fader (double-click it for 0 dB), the level in dB (type a number and
+press Enter), and a meter after the fader.
+
+- A fader runs from −80 dB (off the bottom) to +12 dB; 0 dB is unity.
+- A move or a switch **ramps over 20 ms**, so neither clicks on air.
+- Positions are **saved** within half a second and come back after a restart.
+  They are synced to a backup with the rest of the routing.
+- The same faders and switches answer to REST (`/api/audio-mix`), the TCP `MIX`
+  command, scripts (`air.mix_on`, `air.mix_gain`, …, and the `mixEvent`
+  trigger) and Axia GPIO (`mix:<output>/<source>` targets and lamps). The page
+  follows a change made from any of them.
+- A locked backup refuses them, like every other control.
+- An output that plays one source has no faders: its single source passes
+  untouched, bit for bit.
+
 !!! note "Upgrading"
     A configuration from before 0.15.64 that already sends several blocks to
     one output keeps working: on the first start that output gets **Allow
@@ -337,6 +356,7 @@ encoder's input, a track's input. So the rule for a redundant pair is simple:
 | Channels | **Channels** | `audio_outputs[].channels` | `0` | How many channels the output carries. `0` = all the device has. |
 | Device channels | **Device channels out** | `audio_outputs[].channel_map` | `[]` | Which device channel each of the output's channels plays to, from **0**. The device is opened as wide as the highest one; the rest play silence. |
 | Sample rate | **Sample rate** | `audio_outputs[].rate` | `0` | The rate the device is opened at. `0` = the usual: 48 kHz on Linux, the device's own rate elsewhere. `192000` is for a Stereo Tool MPX composite, and the device must run at it natively — the composite is never resampled. |
+| Faders and switches | **Audio › Mixer** | `audio_mix_sources` (top level) | `[]` | Each source's `gain_db` (−80…+12) and `on` on a mixing output, as `{output, source, gain_db, on}` with `source` the full label. Unset = 0 dB, on. Synced. |
 | Allow mixing | **Sources › Allow mixing** | `audio_mix_outputs` (top level) | `[]` | The names of the outputs that may play more than one source, summed. Every other output plays one source. A list of names rather than a field on the row, because it is synced to a backup while the rows are machine-local. |
 
 Both lists live at the top level of `ndi2srt.json`:

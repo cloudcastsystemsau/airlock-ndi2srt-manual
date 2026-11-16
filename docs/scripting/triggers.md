@@ -88,6 +88,7 @@ The **Binding** column is what you write in the configuration and what the conso
 | `audioEvent` | `AudioEvent` | An audio delay changed state, dumped, or a cough or censor went on or off | The **audio delay's name** | `name`, `event` (table below), plus that event's own keys |
 | `audioEncoderEvent` | `AudioEncoderEvent` | An audio encoder started or stopped, connected or dropped, or its SIP call changed | The **encoder's name** | `name`, `event` (table below), plus `state`, `from` on a call change |
 | `audioDecoderEvent` | `AudioDecoderEvent` | The same, for an audio decoder | The **decoder's name** | The same |
+| `mixEvent` | `MixEvent` | A fader or switch moved on a mixing output, from any surface | The **output's name** | `name`, `output`, `source` (short name), `who` (full label), `on` (`true`/`false`), `gain_db`, `event` (`MixChanged`) |
 | `alarm` | `Alarm` | An alarm was raised or cleared | The alarm code | `code`, `state` (`raised` \| `cleared`), `block`, `channel`, `message` |
 | `gpi` | `Gpi` | A GPIO input edge that a mapping row recognised | `<device>/<port>.<pin>` | `device`, `port`, `pin`, `edge` (`asserted` \| `released`), `action`, `channel` |
 | `scteReceived` | `ScteReceived` | A SCTE cue arrived from the source | The cue kind | `channel`, `cueType`, `immediate`, `spliceEventId`, `uniqueProgramId`, `preRollMs`, `breakDurationSeconds`, `autoReturn`, `description` |

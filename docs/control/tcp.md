@@ -330,6 +330,7 @@ changes, which is far cheaper than polling.
 | `STATUS VENC <ch> <Word>` | a subscribed encoder's state changed |
 | `STATUS VDEC <ch> <Word>` | a subscribed decoder's state changed |
 | `ALARM CH <ch> <code>` | a **new** alarm code became active on a subscribed channel |
+| `MIX "<output>" "<source>" ON\|OFF <dB>` | a mix source moved (`SUBSCRIBE MIX` or `ALL`) — see [Mixer](#mixer) |
 
 A standing alarm is pushed once. When it clears it can be pushed again the next
 time it raises. Process-wide alarms (channel 0) are not pushed to a channel
@@ -551,6 +552,43 @@ Replies that are particular to stages:
 ```
 
 See [Audio delay](../audio/delay.md).
+
+## Mixer
+
+A source on an output with **Allow mixing** on has a fader and an on/off
+switch ([Inputs and outputs](../audio/io.md#faders-and-switches)). `MIX` reads and
+moves them. Names are quoted when they have spaces; a source is named as the
+console shows it (`Studio`, `st`, `Breakfast monitor`) or by its full label.
+
+```text
+> MIX "Monitors" "Studio" GAIN -6
+< OK 0 MIX "Monitors" "Studio" ON -6.0
+> MIX Monitors Studio OFF
+< OK 0 MIX "Monitors" "Studio" OFF -6.0
+> MIX Monitors Studio TOGGLE
+< OK 0 MIX "Monitors" "Studio" ON -6.0
+> MIX "Monitors" "Studio"
+< OK 0 MIX "Monitors" "Studio" ON -6.0
+> MIX
+< OK 0 MIX 2
+< MIX "Monitors" "Studio" ON -6.0
+< MIX "Monitors" "Talkback" OFF 0.0
+```
+
+| Command | Does |
+|---|---|
+| `MIX` (or `MIX ALL`) | every source on every mixing output: a count, then a `MIX` line each |
+| `MIX "<output>" "<source>"` | one source's state |
+| `MIX "<output>" "<source>" ON\|OFF\|TOGGLE` | switch it |
+| `MIX "<output>" "<source>" GAIN <dB>` | move its fader, `-80` to `+12` |
+
+A refusal is `ERR 0 MIX <reason>` (a wrong name lists what the output has), and
+`ERR 0 LOCKED <reason>` on a locked backup.
+
+`SUBSCRIBE MIX` answers `OK 0 SUBSCRIBED MIX` and the current state, then pushes
+a `MIX "<output>" "<source>" ON|OFF <dB>` line whenever a source changes — from
+the console, REST, a script, GPIO or another TCP client. `SUBSCRIBE ALL` pushes
+them too.
 
 ## Data senders
 

@@ -128,6 +128,10 @@ The reads, which like every read are never refused:
 
 | call | returns | what it is |
 |---|---|---|
+| `air.mix_on(output, source[, on])` · `air.mix_off(output, source)` | bool | NDS-173: switch a source on a mixing output on (the default) or off; ramped, saved |
+| `air.mix_toggle(output, source)` | bool | flip it |
+| `air.mix_gain(output, source, db)` | bool | its fader, −80 to +12 dB |
+| `air.mix_state(output, source)` | table, or nil | `output`, `source`, `who`, `on`, `gain_db`, `live`, `peak_dbfs` |
 | `air.audio_state(name)` | `building` \| `full` \| `exiting` \| `bypass` \| `stopped`; `""` for no such delay | an audio delay's state word |
 | `air.audio_depth(name)` · `air.audio_target_depth(name)` | seconds, `0` for no such delay | its depth now, and what it builds to |
 | `air.audio_running(kind, name)` | bool | is that block running (an encoder held on a standby is not) |

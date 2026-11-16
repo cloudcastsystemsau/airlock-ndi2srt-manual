@@ -426,6 +426,23 @@ curl -s -X POST "http://localhost:8090/api/audio-delays/studio-dump/cough?down=t
 curl -s -X POST "http://localhost:8090/api/audio-sources/fm/rds?field=rt&value=Now%20playing%3A%20Track"
 ```
 
+### Mixer — faders and switches
+
+| Method | Path | Does |
+|---|---|---|
+| `GET` | `/api/audio-mix` | every output with **Allow mixing** on, and each source that plays to it: `who` (its full label), `name` (its short name), `gain_db`, `on`, `live` (playing now) and `peak_dbfs` (its level after the fader) |
+| `POST` | `/api/audio-mix?output=&source=[&gain_db=][&on=][&toggle=1]` | move one source's fader, switch it on or off, or flip it. `source` is the block's name as the console shows it (`Studio`, `st`, `Breakfast monitor`) or its full label. The move ramps over 20 ms and is saved within half a second |
+
+`gain_db` runs from `-80` to `+12` (0 = unity) and is clamped to that range.
+`on` takes `true/false`, `on/off` or `1/0`. An output that plays one source is
+`409` *plays one source*; a name that is not there is `404` and lists what the
+output has; a locked backup is `403`.
+
+```bash
+curl -s -X POST "http://localhost:8090/api/audio-mix?output=Monitors&source=Studio&gain_db=-6"
+curl -s -X POST "http://localhost:8090/api/audio-mix?output=Monitors&source=Studio&toggle=1"
+```
+
 ---
 
 ## Asset library — operator
