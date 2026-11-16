@@ -35,9 +35,10 @@ flowchart LR
 ```
 
 The same shape applies on the way out. A named output is one playback stream on
-one device; every block that plays to it adds a **voice**, and the registry
-mixes the voices into the device buffer. Two delays can share one monitor
-output without fighting for the card.
+one device, and a block that plays to it adds a **voice**. An output plays
+**one** source unless you allow mixing on it; then the registry sums the voices
+into the device buffer, so two delays can share one monitor output without
+fighting for the card. See [One source per output](#one-source-per-output).
 
 !!! tip "Name inputs after the signal, not the hardware"
     `Studio A desk`, `Talkback return`, `AES67 rx 3` survive a card swap.
@@ -110,6 +111,36 @@ decoder's output, or a delay's confidence monitor. The output row shows
 An output that nothing feeds still opens and plays silence. That is deliberate —
 the card is held, its clock is running, and the first voice to arrive is heard
 immediately rather than after a device open.
+
+## One source per output
+
+An output plays one source. Two programmes summed on the feed to a transmitter
+is the mistake this guards against, so it is refused when you save, not found
+on air:
+
+- **Saving is refused** when two blocks pick the same output, and the message
+  names both, for example *audio output "TX 1" plays one source, and audio
+  decoder "Studio" and stage "proc" both pick it*. One block with two feeds to
+  the same output (a delay and its confidence monitor) counts as two sources.
+- **Pickers show it.** In every output picker, an output another block already
+  plays to is greyed out, with that block's name, so you cannot pick it by
+  accident.
+- **The output itself holds the line.** If a second block reaches it anyway, the
+  output refuses it, and that block's card says whose the output is.
+
+When you do want several sources summed (a shared monitor, a talkback mix), tick
+**Allow mixing** on the output's row. Its pickers then say *(mixing)* and any
+number of blocks may play to it.
+
+Mixing is part of the routing, so a backup follows its primary's choice even
+though the devices behind the names are each box's own. A disabled block does
+not hold an output.
+
+!!! note "Upgrading"
+    A configuration from before 0.15.64 that already sends several blocks to
+    one output keeps working: on the first start that output gets **Allow
+    mixing**, and the log says which output and which blocks. Turn it off when
+    you want that output to be one-source.
 
 ![An input row: device, channels, state and meter](../img/server/audio.png){ .shot }
 
@@ -306,6 +337,7 @@ encoder's input, a track's input. So the rule for a redundant pair is simple:
 | Channels | **Channels** | `audio_outputs[].channels` | `0` | How many channels the output carries. `0` = all the device has. |
 | Device channels | **Device channels out** | `audio_outputs[].channel_map` | `[]` | Which device channel each of the output's channels plays to, from **0**. The device is opened as wide as the highest one; the rest play silence. |
 | Sample rate | **Sample rate** | `audio_outputs[].rate` | `0` | The rate the device is opened at. `0` = the usual: 48 kHz on Linux, the device's own rate elsewhere. `192000` is for a Stereo Tool MPX composite, and the device must run at it natively — the composite is never resampled. |
+| Allow mixing | **Sources › Allow mixing** | `audio_mix_outputs` (top level) | `[]` | The names of the outputs that may play more than one source, summed. Every other output plays one source. A list of names rather than a field on the row, because it is synced to a backup while the rows are machine-local. |
 
 Both lists live at the top level of `ndi2srt.json`:
 

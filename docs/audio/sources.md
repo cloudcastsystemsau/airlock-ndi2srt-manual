@@ -327,6 +327,22 @@ A stage's output is a source like any other. Pick it:
 - on **Audio › Encoders**, as the encoder's source;
 - on another stage, as its **From**.
 
+### Play it straight to an output
+
+A stage can also play its processed audio to a sound card: pick the output in
+**Play to** on the stage card (outputs are set up on **Audio › Inputs &
+outputs**). This is the baseband programme, the same audio the stage's encoders
+receive, with the processor's latency. It is not the FM composite (see
+[MPX](#fm-composite-mpx-and-rds) for that).
+
+- The card shows **Playing to *output*** once audio is flowing, or **Not playing
+  to *output*** with the reason, for example `no audio output called "TX 1"`.
+- Changing or clearing **Play to** takes effect on the running stage. Stereo Tool
+  is not reloaded and the stage's encoders do not gap.
+- A missing output never stops the stage: its encoders and delays carry on.
+- A standby will not report itself ready to take over until it has the same
+  output.
+
 The card's `used by N encoder(s)` pill tells you how many consumers are attached
 right now. A stage with no consumers still runs — it is cheap to leave one
 configured and unused, and it means a consumer that picks it later hears audio
@@ -350,6 +366,7 @@ immediately.
 | Upstream | **From** | `audio_stages[].source` | `""` | The source into the stage: a named input or another stage's id. |
 | Kind | **Kind** | `audio_stages[].kind` | `stereotool` | `stereotool` (a processor instance) or `passthrough`. |
 | On | **On** | `audio_stages[].enabled` | `true` | Marks the stage enabled. To take processing out of the path on air, use **Mode › Bypass**. |
+| Play to | **Play to** | `audio_stages[].output` | `""` | An audio output the processed audio plays to, as well as feeding its consumers. Empty = none. Changed live. |
 
 ### Stereo Tool, per stage
 
@@ -392,7 +409,7 @@ immediately.
 ### Status endpoint
 
 `GET /api/audio-sources` returns two things: `sources`, a row per stage with its
-run state, in/out meters, rate, consumers and processor state (loaded, version,
+run state, in/out meters, rate, consumers, its `output` (`name`, `playing`, `note`) and processor state (loaded, version,
 licence validity, latency, bypass, web port, and with MPX on whether the
 composite is playing, at what rate or why not, and the RDS fields as the
 processor holds them); and `list`, every pickable source

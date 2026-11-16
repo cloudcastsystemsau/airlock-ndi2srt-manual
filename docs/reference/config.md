@@ -892,6 +892,17 @@ This box's audio playback devices, as named outputs. Same shape and same rules a
 
 Playback is ALSA, CoreAudio, WASAPI or ASIO (`asio:<driver>`; with a `channel_map`, only the mapped ASIO outputs are claimed).
 
+## audio_mix_outputs
+
+NDS-172. The audio outputs that may play more than one source at once, by
+name. Every other output plays one source: a configuration that sends two
+enabled blocks to it is refused, naming both. **Synced** (routing policy), unlike
+`audio_outputs`.
+
+| Key | Type | Default | Meaning |
+|---|---|---|---|
+| `audio_mix_outputs` | array of strings | `[]` | Output names allowed to mix. On upgrade, an output the file already shares is added, and the log says so |
+
 ---
 
 ## audio_stages
@@ -907,6 +918,7 @@ runs once.
 | `audio_stages[].source` | string | `""` | An input name, or another stage id |
 | `audio_stages[].kind` | string | `"stereotool"` | `stereotool` or `passthrough` |
 | `audio_stages[].enabled` | bool | `true` | Disabled behaves as passthrough, so the source stays available and encoders never drop |
+| `audio_stages[].output` | string | `""` | NDS-171: an audio output (`audio_outputs[].name`) the processed audio plays to. Changed on the running stage without a restart |
 | `audio_stages[].stereotool` | object | *(off)* | See [Stereo Tool](#stereo-tool) |
 
 ---
