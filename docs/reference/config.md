@@ -974,7 +974,8 @@ source.
 | `audio_delays[].rollout_overlap_ms` | float | `250.0` | Equal-power crossfade window for a rollout exit |
 | `audio_delays[].rollout_return_output` | string | `""` | With `exit_mode: "playout"`: a named output carrying the tail alone (no live, no censor) while it plays out, silent otherwise |
 | `audio_delays[].build_after_dump` | string | `"both"` | Rebuild after a dump: `both` (any dump), `dump`, `dumpall` or `disabled` (stay at what is left). A document carrying the old `auto_rebuild: false` loads as `disabled` |
-| `audio_delays[].build_mode` | string | `"expand"` | `expand` stretches the live programme slower; `insert` airs a fill asset while the ring fills, then crossfades to live |
+| `audio_delays[].build_mode` | string | `"expand"` | `expand` stretches the live programme slower; `insert` airs a fill asset while the ring fills, then crossfades to live; `preroll` airs silence while it fills, from any depth (a rebuild after a dump stretches) |
+| `audio_delays[].dump_strategy` | string | `"dump"` | `dump` removes the audio; `censor` covers everything held with the censor cover and keeps the depth |
 | `audio_delays[].fill_strategy` | string | `"squeeze"` | For an insert build: `squeeze` (play the asset stretched to span the build), `silent`, or `input` (air `fill_input` live) |
 | `audio_delays[].fill_input` | string | `""` | With `fill_strategy: "input"`: the audio input or processed stage aired during an insert build — not the delay's own source |
 | `audio_delays[].fill_asset` | string | `""` | The fill asset aired during an insert build. Any file ffmpeg can decode |

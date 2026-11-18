@@ -170,6 +170,20 @@ catch something with **Post-cough** or **Post-censor** before it airs. Leave
   The **At these settings** panel on the Build tab shows both times: the depth in
   real time for a build from live, and the expand time for a rebuild.
 
+- **Pre-roll (silence while it fills)** — ProfanityDelayService's PRE-ROLL. Like
+  an insert with **Silence**: the output holds and air is silent while the gap
+  opens in real time, then the delayed programme fades in at full depth. Unlike
+  an insert it pre-rolls from any depth, not only from near live: pressed with
+  three seconds already held, it is silent for the seven still missing (never
+  more — the depth never overshoots **Max delay**). A rebuild after a dump or a
+  cough **stretches**, so a dump never puts dead air on the programme; **Build**
+  pressed during that rebuild leaves it stretching.
+
+  ![Build mode set to Pre-roll](../img/audio/delay-build-preroll.png){ .shot }
+
+  The **At these settings** panel shows the real-time fill from live, that silence
+  airs, and the stretch time for a rebuild.
+
 The fill asset is an audio file uploaded to the box's [asset library](../assets/library.md)
 — pick it from the list beside **Fill asset**, or **Upload…** one; there is no
 typed path. Any file the box's `ffmpeg` can decode plays. If it cannot be
@@ -208,6 +222,37 @@ seconds, and only re-decoded when the chosen asset changes.
   cancel it. The **rollout overlap** tally fires when live joins.
 
 **Bypass** is none of these: it drops straight to live with no transition at all.
+
+### On a dump: remove or cover
+
+**On a dump** decides what **Dump** and **Dump all** do:
+
+- **Remove the audio (dump)** — the default. The read point jumps forward by
+  **Dump size** (or to live for **Dump all**), crossfaded, and the delay
+  rebuilds as **After a dump** says.
+- **Cover what is held (censor)** — ProfanityDelayService's CENSOR dump mode.
+  Nothing is removed: everything the delay holds at the press is covered on air
+  as it plays out, with the delay's **Cover with** setting — the censor file
+  (dayparted by the censor schedule) time-stretched to span exactly what is
+  held, or the tone, or silence. The depth is kept, so the delay stays **SAFE**
+  and nothing is rebuilt. The programme returns, faded in, at the first audio
+  recorded after the press (plus **Overfill**). **Dump** and **Dump all** do the
+  same; a second press while covering extends the cover to what is held then.
+  **Bypass** and **Force censor off** end the cover at once.
+
+  A censor file plays once: if it ends before the held audio has passed, the
+  rest of the cover is silence — never the held audio. If the file cannot be
+  decoded, the cover is the tone. The **dumptrig** / **dumpalltrig** lamps fire,
+  **censorActive** and **dumpCover** are lit while it covers, and the dump count
+  goes up. **Dump size** and **After a dump** do not apply, and are hidden.
+
+  PDS covered the delay *size*; Airlock covers what the delay actually holds, so
+  a press while it is still building does not cover audio that was never in it.
+
+  ![On a dump set to Cover what is held](../img/audio/delay-dump-censor.png){ .shot }
+
+  Automation on the [BDS port](../control/bds.md) sets the two modes with
+  `DUMPMODE=DUMP|CENSOR` and `DELAYBUILDMODE=EXPAND|INSERT|PREROLL`.
 
 ### After a dump
 
@@ -291,6 +336,7 @@ POST /api/audio-delays/{name}/{action}
 | Action | Notes |
 |---|---|
 | `build`, `exit` (or `rollout`), `dump`, `dumpall`, `bypass` | — |
+| `exit-compress`, `exit-playout` | one exit by compressing or by playing the tail out, whatever the **Exit mode** |
 | `cough?down=true` / `cough?down=false` | press and release |
 | `censor?seconds=4` | omit `seconds` for **Censor length** |
 | `censor-on`, `censor-off`, `censor-force-off` | the latch and the escape hatch |
@@ -341,8 +387,24 @@ and change **Max delay**, **Dump size**, the rates and the modes on air.
 
 A GPI row drives a delay instead of a channel by naming it as the row's stage
 (or as a `stage:<name>` target, which lets one pin drive several blocks). The
-actions valid on a delay are **build**, **dump**, **dumpall**, **rollout**,
-**bypass**, **cough**, **censor**, **coughPost** and **censorPost**.
+actions valid on a delay:
+
+| Action | Does | PDS pin |
+|---|---|---|
+| `build` | **Build** | `build` |
+| `rollout` (or `exit`) | exit in the delay's **Exit mode** | `exit` |
+| `compress` | exit by compressing, whatever the **Exit mode**, this time only | `compress` |
+| `playout` | exit by playing the tail out, whatever the **Exit mode**, this time only | `rollout` |
+| `dump`, `dumpall` | **Dump**, **Dump all** (remove or cover, per **On a dump**) | `dump`, `dumpall` |
+| `bypass` | straight to live | — |
+| `cough`, `coughpost` | held: covers while the pin is held | `cough`, `coughpost` |
+| `censor` | on a **Follow the level** row, covers while held (PDS); on a press row, a one-shot of the row's seconds or **Censor length** | `censor` |
+| `censorpost` | held: the post-stage cover while held | `censorpost` |
+| `forcecensoroff` | clears the pre censor, the post censor and a censor dump's cover at once | `forcecensoroff` |
+
+ProfanityDelayService's `static1`–`10` and `pulse1`–`10` pins (a contact re-driven
+after the delay) are GPIO **relays** here — see below. Its `reload` pin has no
+equivalent: restarting a delay throws away the audio it holds.
 
 GPO lamp rows read the delay's own lamp model. Each lamp has a drive pattern —
 steady, slow, fast or a wink — so a tally reads the way a studio expects:
@@ -366,6 +428,8 @@ steady, slow, fast or a wink — so a tally reads the way a studio expects:
 | `playbackStopped` | the delay is enabled but not playing (its source is gone, or it is not running) |
 | `delay10` … `delay100` | the depth is within 2% of that percentage of **Max delay** — a chase |
 | `delay10static` … `delay100static` | the depth is at or above that percentage — a bar graph |
+| `inserting` | an insert or pre-roll build has the fill, the input or silence on air instead of the programme |
+| `dumpCover` | a censor dump is covering (fast pulse) |
 
 Alongside those, momentary **trig** lamps pulse on the event itself —
 `buildtrig`, `exittrig`, `dumptrig`, `dumpalltrig`, `delayfulltrig`,
@@ -374,6 +438,28 @@ Alongside those, momentary **trig** lamps pulse on the event itself —
 than a level. The PDS-named lamps (`rolloutOverlap`, `rolloutendtrig`,
 `playbackStopped` and the fill lamps) let a studio move a ProfanityDelayService
 Axia map across.
+
+ProfanityDelayService's own status names are accepted too, so its map can be
+entered as written; each is stored under the Airlock name of the same meaning:
+
+| PDS status | Airlock lamp |
+|---|---|
+| `idle` | `delayIdle` |
+| `build` | `stateBuilding` (slow pulse; PDS flashed at 1 Hz) |
+| `exit` | `stateRollingOut` |
+| `indelay` | `stateDelayed` |
+| `delaysafe` | `delaySafe` |
+| `precensor`, `precensortrig` | `censorActive`, `censortrig` |
+| `postcensor`, `postcensortrig` | `censorPostActive`, `censorPosttrig` |
+| `cough` | `coughActive` |
+| `postcough`, `postcoughtrig` | `coughPostActive`, `coughPosttrig` |
+| `delayfull`, `delayempty` | `delayFull`, `delayEmpty` |
+| `rolloutoverlap` | `rolloutOverlap` |
+| `playbackstopped` | `playbackStopped` |
+
+The rest — `buildtrig`, `exittrig`, `coughtrig`, `dumptrig`, `dumpalltrig`,
+`delayfulltrig`, `delayemptytrig`, `rolloutendtrig`, `rolloutoverlaptrig`,
+`delay10` … `delay100static` — are the same name in both.
 The lit lamps also appear as pills at the bottom of the card, which is the
 quickest way to check a GPO map without a meter in the rack.
 
@@ -391,7 +477,7 @@ REST, TCP and GPIO.
 ## Settings reference
 
 **Max delay**, **Dump size**, **Build rate**, **Exit rate**, **Build mode**,
-**Exit mode**, **Fill** and **Legacy Protocol ID** take effect on the running
+**Exit mode**, **Fill**, **On a dump** and **Legacy Protocol ID** take effect on the running
 delay: saving them does not restart it, so the audio it holds stays on air. A
 bigger **Max delay** grows the buffer in place; a build under way aims for the new
 size at once; a delay already in delay keeps its depth until it next builds. A
@@ -416,7 +502,8 @@ delay, and it begins again from its **On start** state.
 | Exit mode | **Exit mode** | `audio_delays[].exit_mode` | `compress` | `compress` (drain), `rollout` (crossfade to live) or `playout` (the tail airs, live joins). |
 | Rollout window | **Rollout crossfade** / **Live joins for** | `audio_delays[].rollout_overlap_ms` | `250` | The crossfade length for a rollout exit; for a play-out, how long live is on air over the end of the tail. 0–10000 ms. |
 | Rollout return | **Rollout return** | `audio_delays[].rollout_return_output` | `""` | A play-out exit's return output: the tail alone, no live, no censor, silent outside the exit. Not the air or confidence output. |
-| Build mode | **Build mode** | `audio_delays[].build_mode` | `expand` | `expand` (stretch the live programme) or `insert` (air a fill while the ring fills). |
+| Build mode | **Build mode** | `audio_delays[].build_mode` | `expand` | `expand` (stretch the live programme), `insert` (air a fill while the ring fills) or `preroll` (silence while it fills, from any depth). |
+| Dump mode | **On a dump** | `audio_delays[].dump_strategy` | `dump` | `dump` (remove the audio) or `censor` (cover what is held; keep the depth). |
 | Fill strategy | **Fill** | `audio_delays[].fill_strategy` | `squeeze` | `squeeze` (stretch the asset to span the build) or `silent`. |
 | Fill asset | **Fill asset** | `audio_delays[].fill_asset` | `""` | An uploaded audio file from the [asset library](../assets/library.md), aired during an insert build. |
 | Insert input | **Insert input** | `audio_delays[].fill_input` | `""` | With **Fill** set to **An input** (`fill_strategy: "input"`): the audio input or processed stage aired, live, during an insert build. Not the delay's own source. |
