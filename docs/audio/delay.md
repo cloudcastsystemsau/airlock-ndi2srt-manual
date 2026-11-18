@@ -326,6 +326,17 @@ STATE STAGE Breakfast
 `STATE` answers with the state word, depth, max, SAFE, idle, the cough and censor
 flags and the dumps available.
 
+### BDS (ProfanityDelayService automation)
+
+Automation written for the older ProfanityDelayService drives an audio delay over
+[BDS](../control/bds.md), PDS's own protocol on port 5002, unchanged. Give the
+delay the number that automation uses as its **Legacy Protocol ID** (the `n` in
+`DELAY_n`) on the **Routing** tab, and turn the listener on under
+**Server › Panel**. BDS can build, dump, exit, hold the cough and censor states,
+and change **Max delay**, **Dump size**, the rates and the modes on air.
+
+![Legacy Protocol ID on the Routing tab](../img/audio/delay-legacy-id.png){ .shot }
+
 ### Axia GPIO
 
 A GPI row drives a delay instead of a channel by naming it as the row's stage
@@ -351,11 +362,18 @@ steady, slow, fast or a wink — so a tally reads the way a studio expects:
 | `dumping` | a dump fired in the last second (wink) |
 | `coughActive`, `censorActive` | the pre stage is covering |
 | `coughPostActive`, `censorPostActive` | the post stage is covering |
+| `rolloutOverlap` | live is joining the tail of an exit, until the exit ends |
+| `playbackStopped` | the delay is enabled but not playing (its source is gone, or it is not running) |
+| `delay10` … `delay100` | the depth is within 2% of that percentage of **Max delay** — a chase |
+| `delay10static` … `delay100static` | the depth is at or above that percentage — a bar graph |
 
 Alongside those, momentary **trig** lamps pulse on the event itself —
 `buildtrig`, `exittrig`, `dumptrig`, `dumpalltrig`, `delayfulltrig`,
 `delayemptytrig`, `coughtrig`, `censortrig`, `coughPosttrig`, `censorPosttrig`
-and `rolloutoverlaptrig` — for panels that want an edge rather than a level.
+`rolloutoverlaptrig` and `rolloutendtrig` — for panels that want an edge rather
+than a level. The PDS-named lamps (`rolloutOverlap`, `rolloutendtrig`,
+`playbackStopped` and the fill lamps) let a studio move a ProfanityDelayService
+Axia map across.
 The lit lamps also appear as pills at the bottom of the card, which is the
 quickest way to check a GPO map without a meter in the rack.
 
@@ -372,6 +390,14 @@ REST, TCP and GPIO.
 
 ## Settings reference
 
+**Max delay**, **Dump size**, **Build rate**, **Exit rate**, **Build mode**,
+**Exit mode**, **Fill** and **Legacy Protocol ID** take effect on the running
+delay: saving them does not restart it, so the audio it holds stays on air. A
+bigger **Max delay** grows the buffer in place; a build under way aims for the new
+size at once; a delay already in delay keeps its depth until it next builds. A
+change to anything else — the source, the outputs, the channels — restarts the
+delay, and it begins again from its **On start** state.
+
 | Setting | Console label | Config key | Default | Meaning |
 |---|---|---|---|---|
 | Name | **Name** | `audio_delays[].name` | — | Unique name; the address on every surface. |
@@ -380,6 +406,7 @@ REST, TCP and GPIO.
 | Output | **Play to output** | `audio_delays[].output` | `""` | Named output to play the delayed programme to. Empty = publish as a source only. |
 | Confidence output | **Confidence out** | `audio_delays[].post_output` | `""` | Named output for the pre-censored monitor feed. Needs **Ahead of air** above zero. |
 | Monitor lead | **Ahead of air** | `audio_delays[].post_censor_offset_ms` | `0` | Extra delay added to air (0–30000 ms); the confidence feed runs this far ahead of it. |
+| Legacy Protocol ID | **Legacy Protocol ID** | `audio_delays[].legacy_id` | *(none)* | The `n` in `DELAY_n` on the [BDS port](../control/bds.md). Whole number ≥ 1, unique on the box; blank (0) keeps the delay off BDS. |
 | Max delay | **Max delay** | `audio_delays[].max_delay_s` | `10` | Target depth, 0.5–120 s. |
 | Dump size | **Dump size** | `audio_delays[].dump_size_s` | `7` | Seconds one **Dump** removes, 0–120. `0` = dump everything. |
 | Build rate | **Build rate** | `audio_delays[].build_rate_pct` | `4` | How fast the depth grows, as a percent of real time, 1–10. |

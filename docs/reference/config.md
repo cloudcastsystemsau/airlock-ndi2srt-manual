@@ -40,7 +40,7 @@ The directory holds the configuration file and, beside it, `ndi/`, `logs/`,
 {
   "channels": [ { "id": 1, "name": "Channel 1", "ndi": {}, "encoder": {}, "video": {},
                   "audio": {}, "ts": {}, "srt": {}, "decoder": {}, "delay": {}, "scte": {} } ],
-  "clock": {}, "web": {}, "tcp": {}, "process": {}, "ndi_network": {},
+  "clock": {}, "web": {}, "tcp": {}, "bds": {}, "process": {}, "ndi_network": {},
   "logging": {}, "audit": {}, "auth": {}, "alarms": {}, "email": {}, "webhooks": {},
   "snmp": {}, "store": {}, "clips": {}, "redundancy": {}, "watchdog": {},
   "gpio": {}, "data": {}, "scripting": {}, "licence": {}, "telemetry": {}, "tools": {},
@@ -340,6 +340,21 @@ The Airlock-compatible line-protocol control port.
 | `tcp.bind` **(local)** | string | `"0.0.0.0"` | Local address to bind |
 | `tcp.port` **(local)** | integer | `9350` | Port |
 | `tcp.allow_list` **(local)** | string | `""` | Comma-separated peer IPs allowed in. Empty = any. Loopback is always allowed |
+
+---
+
+## bds
+
+The ProfanityDelayService (BDS) control port, for the audio delays with a Legacy
+Protocol ID. See [BDS protocol](../control/bds.md). Read at start: restart after a
+change.
+
+| Key | Type | Default | Meaning |
+|---|---|---|---|
+| `bds.enabled` **(local)** | bool | `false` | Run the BDS listener |
+| `bds.bind` **(local)** | string | `"0.0.0.0"` | Local address to bind |
+| `bds.port` **(local)** | integer | `5002` | Port; must differ from `tcp.port` |
+| `bds.allow_list` **(local)** | string | `""` | Comma-separated peer IPs allowed in. Empty = any. Loopback is always allowed |
 
 ---
 
@@ -948,6 +963,7 @@ source.
 | `audio_delays[].enabled` | bool | `true` | |
 | `audio_delays[].source` | string | `""` | An input name or a stage id to delay |
 | `audio_delays[].output` | string | `""` | The audio output to play the delayed programme to. Empty publishes it as a source only |
+| `audio_delays[].legacy_id` | integer | `0` | The `n` in BDS's `DELAY_n`; unique, 0 = not on the BDS port. Omitted when 0 |
 | `audio_delays[].max_delay_s` | float | `10.0` | Target and maximum depth |
 | `audio_delays[].dump_size_s` | float | `7.0` | Seconds one dump removes. `0` dumps everything to live |
 | `audio_delays[].build_rate_pct` | float | `4.0` | How fast the delay grows, as a percent of real time (1–10). Time-stretched with pitch kept |

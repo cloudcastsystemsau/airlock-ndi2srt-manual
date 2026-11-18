@@ -100,6 +100,7 @@ nav:
       - Operating the delay: control/operating.md
       - Panel page: control/panel.md
       - TCP control: control/tcp.md
+      - BDS protocol (PDS): control/bds.md
       - REST API: control/rest.md
       - Axia GPIO: control/gpio.md
       - Channel lock: control/lock.md
